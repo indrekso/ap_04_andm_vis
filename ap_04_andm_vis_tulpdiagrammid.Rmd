@@ -1,0 +1,126 @@
+---
+title: 'Andmete visualiseerimine: tulpdiagrammid'
+author: "Indrek Soidla"
+date: "2023-09-26"
+output: 
+  html_document:
+    theme: spacelab
+    highlight: tango
+    fig_cap: true
+    toc: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+Vaatame lisaks ka seda, kuidas esitada kategoriaalse tunnuse jaotus visuaalselt ehk kuidas R-s koostada tulpdiagrammi. 
+
+Näiteks soovime esitada tunnuse `gincdif` sagedusjaotuse tulpdiagrammil. Selleks kasutame andmestikku `ee10`, funktsiooni `aes` argumendile `x` omistame väärtuse `gincdif` ehk diagrammi x-teljel kuvame selle tunnuse väärtused. Kuna soovime andmeid kaaluda, siis samas täpsustame ka argumendi `weight` väärtuse (kaalutunnus `pspwght`).
+
+```{r}
+library(haven)
+r10 <- read_spss("data/ess10.sav")
+
+library(tidyverse)
+ee10 <- r10 %>% 
+  filter(cntry == "EE") %>% 
+  select(gndr, gincdif, pspwght) %>% 
+  mutate(gincdif = recode(as.factor(gincdif),
+                          "1" = "Täiesti nõus",
+                          "2" = "Nõus",
+                          "3" = "Ei ole nõus ega vastu",
+                          "4" = "Ei ole nõus",
+                          "5" = "Ei ole üldse nõus"),
+         gndr = recode(as.factor(gndr), 
+                       "1" = "Mees",
+                       "2" = "Naine"))
+
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(data = ee10, mapping = aes(x = gincdif, weight = pspwght))
+```
+
+Sellest siiski ei piisa, sest peame defineerima ka, et soovime tulpdiagrammi. Selleks lisame koodirea lõppu `+` ja järgmisele reale lisame funktsiooni `geom_bar` (erinevat tüüpi jooniste ehk täpsemalt visuaalsete elementide jaoks on erinevad `geom_`id, nt hajuvusdiagrammi saame funktsiooniga `geom_point`, joondiagrammi funktsiooniga `geom_line`).
+
+```{r}
+ggplot(data = ee10, mapping = aes(x = gincdif, weight = pspwght)) +
+  geom_bar()
+```
+
+Kui soovime andmelünkade sagedust joonisel mitte näidata, saame andmelüngad eelnevalt lihtsalt välja filtreerida:
+
+```{r}
+library(tidyr) # kui R ütleb, et ei leia funktsiooni drop_na, siis võib selle paketi sisse laadida
+
+ee10 %>% 
+  drop_na(gincdif) %>% 
+  ggplot(mapping = aes(x = gincdif, weight = pspwght)) +
+    geom_bar()
+```
+
+Kui soovime y-teljel mitte indiviidide arvu, vaid protsente, siis tuleb täpsustada funktsiooni `aes` argumendi `y` väärtus `after_stat(prop)` - funktsiooniga `after_stat` esitatakse joonise aluseks olevad andmed mingi statistilise teisenduse alusel, `prop` määrabki ära, et soovime indiviidide arvud teisendada osakaaludeks. Argument `group = 1` tuleb lisada, et defineerida, et osakaale ei arvutata mingite gruppide lõikes, vaid kõigi viie kategooria osakaalud annavad kokku 1 ehk 100%.
+
+```{r}
+ee10 %>% 
+  drop_na(gincdif) %>% 
+  ggplot(mapping = aes(x = gincdif, y = after_stat(prop), group = 1, weight = pspwght)) +
+    geom_bar()
+```
+
+Lisame ka joonisele pealkirja ja telgede nimed (kuigi tunnuse kategooriad on joonisel ingliskeelsed, lisan muu info eestikeelsena; korrektseks esitamiseks peaks muidugi kogu info olema ühes keeles):
+
+```{r}
+ee10 %>% 
+  drop_na(gincdif) %>% 
+  ggplot(mapping = aes(x = gincdif, y = after_stat(prop), group = 1, weight = pspwght)) +
+    geom_bar() +
+    labs(title = "Valitsus peaks rakendama abinõusid, vähendamaks erinevusi sissetulekute \ntasemes: hinnangute protsentjaotus",
+         subtitle = "Euroopa Sotsiaaluuringu 2020. aasta Eesti andmed",
+         x = "Nõustumine väitega",
+         y = "Osakaal")
+```
+
+Kui soovime protsentjaotusi grupiti, nt soo lõikes, siis tuleb defineerida `group = gndr` ning et eristus soo alusel ka nähtav oleks, siis `fill = gndr`.
+
+```{r}
+ee10 %>% 
+  drop_na(gincdif) %>% 
+  ggplot(aes(x = gincdif, y = after_stat(prop), group = gndr, fill = gndr, weight = pspwght)) +
+    geom_bar() +
+      labs(title = "Valitsus peaks rakendama abinõusid, vähendamaks erinevusi sissetulekute \ntasemes: hinnangute protsentjaotus",
+           subtitle = "Euroopa Sotsiaaluuringu 2020. aasta Eesti andmed",
+           x = "Nõustumine väitega",
+           y = "Osakaal",
+         fill = "Sugu")
+```
+
+Meeste ja naiste tulpade teineteise otsa asetamine ei anna siiski head tulemust, sest protsendid on arvutatud soo lõikes, st meeste ja naiste kohta eraldi. Nii ei anna näiteks joonisel olev info, et väitega nõustuvate meeste ja naiste protsentide summa on ligi 100%, meile mingit sisulist infot. Asetame meeste ja naiste tulbad kõrvuti, lisades argumendi `position = "dodge"`.
+
+```{r}
+ggplot(ee10 %>% drop_na(gincdif), aes(x = gincdif, y = after_stat(prop), group = gndr, fill = gndr, weight = pspwght)) +
+  geom_bar(position = "dodge") +
+    labs(title = "Valitsus peaks rakendama abinõusid, vähendamaks erinevusi sissetulekute \ntasemes: hinnangute protsentjaotus",
+         subtitle = "Euroopa Sotsiaaluuringu 2020. aasta Eesti andmed",
+         x = "Nõustumine väitega",
+         y = "Osakaal",
+         fill = "Sugu")
+```
+
+Et y-telg oleks selgemini loetav, lisame murdarvude asemele protsendid, kasutame selleks paketist `scales` funktsiooni `label_percent` abi.
+
+```{r}
+ggplot(ee10 %>% drop_na(gincdif), aes(x = gincdif, y = after_stat(prop), group = gndr, fill = gndr, weight = pspwght)) +
+  geom_bar(position = "dodge") +
+    labs(title = "Valitsus peaks rakendama abinõusid, vähendamaks erinevusi sissetulekute \ntasemes: hinnangute protsentjaotus",
+         subtitle = "Euroopa Sotsiaaluuringu 2020. aasta Eesti andmed",
+         x = "Nõustumine väitega",
+         y = "Osakaal",
+         fill = "Sugu") +
+  scale_y_continuous(labels = scales::label_percent())
+```
+
+

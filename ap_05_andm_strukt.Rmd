@@ -1,0 +1,260 @@
+---
+title: "Andmestike ümberstruktureerimine"
+author: "Indrek Soidla"
+institute: "Tartu Ülikool, ühiskonnateaduste instituut"
+date: "2023/10/02 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    self_contained: true
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+### Kuidas on muutunud Eestis 2002-2020 rahulolu eluga, demokraatia ja majanduse olukorraga?
+
+- Loeme andmed sisse
+
+```{r message = FALSE, warning = FALSE}
+library(haven)
+library(tidyverse)
+library(TAM)
+
+nordic2_10 <- read_spss("data/ess2_10_nordic.sav")
+
+nordic2_10 <- nordic2_10 %>% 
+  mutate(essround = 2000 + essround * 2)
+```
+
+---
+
+### Arvutame kolme tunnuse aritmeetilised keskmised aastati
+
+```{r}
+stf_ee <- nordic2_10 %>% 
+  filter(cntry == "EE") %>% 
+  group_by(essround) %>% 
+  summarise(stflife_keskmine = weighted_mean(stflife, w = pspwght),
+            stfdem_keskmine = weighted_mean(stfdem, w = pspwght),
+            stfeco_keskmine = weighted_mean(stfeco, w = pspwght))
+stf_ee
+```
+
+---
+
+### Teeme joondiagrammi
+
+- Ühe tunnusega lihtne
+
+```{r fig.dim = c(7, 4), fig.width = "100%"}
+stf_ee %>% 
+  ggplot(aes(x = essround, y = stflife_keskmine)) +
+  geom_line()
+```
+
+- Kuidas saada joonisele ka muud tunnused, eristatuna värvi alusel?
+
+---
+
+### Struktureerime andmestiku ümber laiformaadist pikkformaati
+
+```{r}
+stf_ee_pikk <- stf_ee %>% 
+  pivot_longer(cols = !essround, 
+               names_to = "tunnus", 
+               values_to = "keskmine")
+stf_ee_pikk
+```
+
+---
+
+### Teeme joonise
+
+```{r fig.dim = c(10, 5)}
+stf_ee_pikk %>% 
+  ggplot(aes(x = essround, y = keskmine, colour = tunnus)) +
+  geom_line() +
+  theme_gray(base_size = 18)
+```
+
+---
+
+### Kuidas on rahulolu Eesteis muutunud võrdluses Põhjamaadega?
+
+- Saaksime teha joondiagrammid Eesti ja iga Põhjamaa kohta
+
+- Vajame samasugust andmestikku, kus oleks samad andmed / samad read teiste riikide kohta
+
+- Arvutame kõigepealt keskmised laiformaadis tabelis
+
+```{r message = FALSE, warning = FALSE}
+stf_nordic <- nordic2_10 %>% 
+  mutate(cntry = as_factor(cntry)) %>% 
+  group_by(cntry, essround) %>% 
+  summarise(stflife_keskmine = weighted_mean(stflife, w = pspwght),
+            stfdem_keskmine = weighted_mean(stfdem, w = pspwght),
+            stfeco_keskmine = weighted_mean(stfeco, w = pspwght))
+```
+
+---
+
+### Struktureerime andmestiku ümber laiformaadist pikkformaati
+
+```{r}
+stf_nordic_pikk <- stf_nordic %>% 
+  pivot_longer(cols = !c(cntry, essround), 
+               names_to = "tunnus", 
+               values_to = "keskmine")
+stf_nordic_pikk
+```
+
+---
+
+### Teeme joonise
+
+```{r plot_nordic_5, eval = FALSE}
+stf_nordic_pikk %>% 
+  ggplot(aes(x = essround, y = keskmine, colour = tunnus)) +
+  geom_line() +
+  facet_wrap(~ cntry) +
+  theme_gray(base_size = 18)
+```
+
+---
+
+### Teeme joonise
+
+```{r ref.label = "plot_nordic_5", fig.dim = c(11, 7), echo = FALSE}
+```
+
+---
+
+### Saame sama andmestikku kasutada, et võrrelda nt eluga rahulolu riigiti ühel joonisel
+
+```{r fig.dim = c(8, 4)}
+stf_nordic_pikk %>% 
+  filter(tunnus == "stfeco_keskmine") %>% 
+  ggplot(aes(x = essround, y = keskmine, colour = cntry)) +
+  geom_line()
+```
+
+- Riigid pole legendil samas järjestuses, mis jooned joonisel
+
+---
+
+### Saame sama andmestikku kasutada, et võrrelda nt eluga rahulolu riigiti ühel joonisel
+
+- Muudame riikide järjekorda tunnuses (reastame faktortunnuse tasemed ümber)
+
+```{r fig.dim = c(8, 4)}
+stf_nordic_pikk %>% 
+  filter(tunnus == "stfeco_keskmine") %>% 
+  ggplot(aes(x = essround, y = keskmine, colour = fct_reorder(cntry, keskmine, .desc = TRUE))) +
+  geom_line()
+```
+
+---
+
+### Harjutus 1
+
+- Koostage joondiagrammid, millel on näidatud politsei usaldamise keskmised andmestikus olevates riikides 2002-2020. 
+
+- Kumba usaldatakse rohkem, kas politseid või õigussüsteemi? Kas see on nii kõigis riikides?
+
+- Kas muutused politsei ja õigussüsteemi usaldamises on järginud samasugust trendi? Millistes riikides on valitsev stabiilsus, millises muutus? Kui muutus, siis kas muutused on enamasti usalduse suurenemise või kahanemise suunas?
+
+- Milliste riikidega sarnaneb Eesti politsei ja õigussüsteemi usaldamise hetketase (aasta 2020)?
+
+```{r echo = FALSE, eval = FALSE}
+stf_ee_2020 <- nordic2_10 %>% 
+  group_by(cntry, essround) %>% 
+  summarise(keskmine_politsei = weighted_mean(trstplc, w = pspwght),
+            keskmine_oigus = weighted_mean(trstlgl, w = pspwght))
+
+stf_ee_2020_pikk <- stf_ee_2020 %>% 
+  pivot_longer(cols = !c(cntry, essround),
+               names_to = "tunnus",
+               values_to = "vaartus")
+
+ggplot(stf_ee_2020_pikk, aes(x = essround, y = vaartus, colour = tunnus)) +
+  geom_line() +
+  facet_wrap(~cntry)
+```
+
+---
+
+### Harjutus 2
+
+- Koostage Eesti 2020. aasta andmete põhjal kuue rahulolutunnuse tulpdiagrammid, kasutades funktsiooni `facet_wrap` (ülesande lihtsamaks lahendamiseks võivad tulpdiagrammil y-teljel olla absoluutsed sagedused (st vastajate arvud), ei pea olema protsendid). Vihje: ülesande saab lahendada, teisendades andmestiku pikkformaati.
+
+```{r echo = FALSE, eval = FALSE}
+stf_ee_2020_pikk <- nordic2_10 %>% 
+  filter(essround == 2020 & cntry == "EE") %>% 
+  select(stfdem:stflife) %>% 
+  pivot_longer(cols = everything(),
+               names_to = "tunnus",
+               values_to = "vaartus")
+
+ggplot(stf_ee_2020_pikk, aes(x = vaartus)) +
+  geom_bar() +
+  facet_wrap(~tunnus)
+```
+
+### Harjutus 3
+
+- Muutke eelneva harjutuse lahendust, esitades jaotusdiagrammid kõigi andmestikus olevate riikide kohta (ikka 2020. aasta kohta). Siin saab diagrammide ülevaatlikumaks ja hõlpsamaks esitamiseks kasutada facet_wrap asemel funktsiooni `facet_grid`, uurige funktsiooni abifailist või guugeldage, kuidas see funktsioon töötab, mis on selle argumendid ja kuidas seda kasutada.
+
+```{r echo = FALSE, eval = FALSE}
+stf_2020_pikk <- nordic2_10 %>% 
+  filter(essround == 2020) %>% 
+  select(cntry, stfdem:stflife) %>% 
+  pivot_longer(cols = !cntry,
+               names_to = "tunnus",
+               values_to = "vaartus")
+
+ggplot(stf_2020_pikk, aes(x = vaartus)) +
+  geom_bar() +
+  facet_grid(tunnus ~ cntry)
+```
+
+---
+
+### Pikkformaadist laiformaati
+
+- Mis siis, kui meil on juba alguses pikkformaadis andmed?
+
+```{r}
+vaesus <- read.csv("data/vaesus.csv") 
+vaesus <- janitor::clean_names(vaesus)
+vaesus
+```
+
+---
+
+### Saame teha eelnevalt näidatud jooniseid ilma suurema vaevata
+
+```{r message = FALSE, warning = FALSE, fig.dim = c(10, 5)}
+vaesus <- vaesus %>% 
+  mutate(suht_vaesus = as.numeric(suht_vaesus),
+         abs_vaesus = as.numeric(abs_vaesus))
+vaesus %>% 
+  ggplot(aes(x = aasta, y = suht_vaesus, colour = vanuseruhm)) +
+  geom_line()
+```
+
+---
+
+### Kui soovime andmeid ülevaatliku tabeli kujul, oleks ikkagi parem laiformaat
+
+```{r}
+vaesus_lai <- vaesus %>% 
+  pivot_wider(names_from = vanuseruhm,
+              values_from = c(suht_vaesus, abs_vaesus))
+vaesus_lai
+```

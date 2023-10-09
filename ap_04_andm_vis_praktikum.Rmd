@@ -1,0 +1,208 @@
+---
+title: "Andmete visualiseerimine R-ga, praktikum"
+author: "Indrek Soidla"
+date: '2023-09-26'
+output: 
+  html_document:
+    theme: spacelab
+    highlight: tango
+    fig_cap: true
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+Tegeleme täna andmete visualiseerimisega, vaatame, kuidas R-s luua erinevat tüüpi diagramme ja mida selle juures silmas pidada.
+
+Loo selleks RStudios uus projekt, loo projektikaustas kaust `data`, lae Moodle'st alla praktikumi andmestik ja kopeeri see kausta `data`. Antud andmestikku läheb vaja teise ülesande juures.
+
+## Harjutus 1
+
+Loo all näidatud joondiagramm. Diagrammil kuvatakse andmed andmestikust `economics`, mis on kaasas paketis `ggplot2`. Diagrammi x-teljel on tunnus `date`, y-teljel tunnus `uempmed`. Joondiagrammi saab luua, kasutades `ggplot`-käsu järel funktsiooni `geom_line`.
+
+Vaja läheb paketti `ggplot2`.
+
+```{r echo = TRUE}
+library(ggplot2)
+```
+
+```{r}
+ggplot(economics, aes(x = date, y = uempmed)) +
+  geom_line() +
+  labs(title = "Töötusperioodi mediaankestus nädalates USA-s",
+       x = "Kuu, aasta",
+       y = "Töötusperioodi mediaankestus nädalates")
+```
+
+## Harjutus 2 {.tabset .tabset-fade .tabset-pills}
+
+### 2a
+
+Lae sisse Euroopa Sotsiaaluuringu 10. laine andmed ja filtreeri andmestikku nii, et analüüsi jääksid ainult Eesti andmed. 
+
+```{r echo = TRUE}
+library(haven)
+library(tidyverse)
+
+r10 <- read_sav("data/ess10.sav")
+
+ee10 <- r10 %>% 
+  filter(cntry == "EE")
+```
+
+Koosta hajuvusdiagramm kahe tunnusega:
+
+- hinnang sellele, kuivõrd on riiklikud valimised Eestis vabad ja ausad (tunnus `fairelcc`, asetage see x-teljele)
+- hinnang sellele, kuivõrd on vähemusgruppide õigused Eestis kaitstud (tunnus `rghmgprc`, asetage see y-teljele).
+
+Tunnused on mõõdetud skaalal 0-10. Lisa diagrammi luues funktsiooni `aes` argumendiks ka `weight = pspwght`, et andmeid kaaluda. Hajuvusdiagrammi funktsiooniks on `geom_point`.
+
+Kas need tunnused on omavahel seotud? Miks seda sellise diagrammi pealt hinnata ei saa? Mida saaks teha, et diagramm oleks loetavam?
+
+Kui oled diagrammi loonud ja küsimustele vastanud, liigu edasi järgmisele paanile.
+
+### 2b
+
+Ilmselt said sellise diagrammi:
+
+```{r echo = TRUE}
+ggplot(ee10, aes(fairelcc, rghmgprc, weight = pspwght)) +
+  geom_point()
+```
+
+Probleem on selles, et diagrammil on palju kattuvaid andmepunkte. Lisage funktsiooni `geom_point` argumendiks `alpha = 0.1`. Argument `alpha` väärtus võib varieeruda nullist üheni. Mida see argument teeb? Mida ütleksite kahe tunnuse vahelise seose kohta nüüd?
+
+### 2c
+
+Ilmselt said sellise diagrammi:
+
+```{r echo = TRUE}
+ggplot(ee10, aes(fairelcc, rghmgprc, weight = pspwght)) +
+  geom_point(alpha = 0.1)
+```
+
+Proovige käsu `geom_point(alpha = 0.1)` asemel käsku `geom_count()`. Mida see käsk teeb?
+
+### Lõplik lahendus
+
+`geom_count` esitab diagrammil punktide suurused selle järgi, kui palju samasuguste väärtustega indiviide n-ö ühe punkti taga on.
+
+```{r echo = TRUE}
+ggplot(ee10, aes(fairelcc, rghmgprc, weight = pspwght)) +
+  geom_count()
+```
+
+## Harjutus 3 {.tabset .tabset-fade .tabset-pills}
+
+### Ülesanne
+
+Eelmises harjutuses viimasena loodud diagrammi nimetatakse mulldiagrammiks. Mulldiagrammil saab aga punkti suuruse abil esitada mitte ainult indiviidide arvu, vaid ka mingi kolmanda tunnuse väärtuseid. 
+
+Laadige sisse pakett `gapminder`, milles on andmestik `gapminder`, lühiduse mõttes omistame selle objektile `gm` ja jätame andmestikku ainult viimase ehk 2007. aasta andmed. Andmestikus on riigi tasandil andmed keskmise oodatava eluea ja SKT kohta.
+
+Kuidas on omavahel seotud keskmine oodatav eluiga ja SKT elaniku kohta? Koostage gapminderi andmetel mulldiagramm, kus
+
+- x-teljel on SKT elaniku kohta (`gdpPercap`) ja 
+- y-teljel oodatav eluiga (`lifeExp`) ning 
+- lisaks näitab punkti suurus elanike arvu riigis (tunnus `pop`). 
+- Lisage punktidele natuke läbipaistvust ning
+- lisage ka diagrammi telgedele ja legendile eestikeelsed nimetused.
+
+```{r echo = TRUE}
+# install.packages("gapminder")
+library(gapminder)
+
+gm <- gapminder %>% 
+  filter(year == 2007)
+```
+
+### Tulemus
+
+```{r}
+ggplot(gm, aes(gdpPercap, lifeExp, size = pop)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "SKT elaniku kohta",
+       y = "Keskmine oodatav eluiga sünnil",
+       size = "Rahvaarv")
+```
+
+## Harjutus 4 {.tabset .tabset-fade .tabset-pills}
+
+### Ülesanne
+
+Võttes aluseks eelmise ülesande, näidake mulldiagrammil eri kontinentidesse kuuluvad riigid (tunnus `continent`) eri värviga.
+
+### Tulemus
+
+Diagrammil on muudetud ka kontinentide nimed eestikeelseks. Seda saab teha, kodeerides tunnuse `continent` ümber eestikeelseks (nt funktsiooniga `recode`), aga saab ka eraldi `ggplot`i funktsooniga. Vaata lahendusest, kuidas viimast saab teha.
+
+```{r}
+ggplot(gm, aes(gdpPercap, lifeExp, size = pop, colour = continent)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "SKT elaniku kohta",
+       y = "Keskmine oodatav eluiga sünnil",
+       size = "Rahvaarv",
+       colour = "Kontinent") +
+  scale_colour_discrete(labels = c("Aafrika", "Ameerika", "Aasia", "Euroopa", "Okeaania"))
+```
+
+### Lahendus
+
+```{r echo = TRUE, eval = FALSE}
+ggplot(gm, aes(gdpPercap, lifeExp, size = pop, colour = continent)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "SKT elaniku kohta",
+       y = "Keskmine oodatav eluiga sünnil",
+       size = "Rahvaarv",
+       colour = "Kontinent") +
+  scale_colour_discrete(labels = c("Aafrika", "Ameerika", "Aasia", "Euroopa", "Okeaania"))
+```
+
+### Lisa
+
+Antud juhul pole diagrammilt näha, mis riiki milline mull esindab. Saaksime diagrammile lisada riikide nimed, aga sel juhul läheks diagramm liiga kirjuks. Üks võimalus oleks muuta diagramm interaktiivseks, nii et mulli peale hiirega liikudes oleks näha, mis riigiga tegu on. Selleks saab kasutada paketi `plotly` ja funktsiooni `ggplotly` abi. 
+
+Omistame eelneva diagrammi uuele objektile `gm_plot` ja lisame funktsiooni `aes` argumendiks `text = country`, et riiginimed talletuksid diagrammi objekti.
+
+```{r ecno = TRUE}
+#install.packages("plotly")
+library(plotly)
+
+gm_plot <- ggplot(gm, aes(gdpPercap, lifeExp, size = pop, colour = continent, text = country)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "SKT elaniku kohta",
+       y = "Keskmine oodatav eluiga sünnil",
+       size = "Rahvaarv",
+       colour = "Kontinent") +
+  scale_colour_discrete(labels = c("Aafrika", "Ameerika", "Aasia", "Euroopa", "Okeaania"))
+```
+
+Interaktiivse joonise saamiseks kasutame funktsiooni ggplotly, mille argumendiga tooltip määrame ära, millise `aes` argumendi väärtusi soovime interaktiivselt esitada. Võite proovida muuta diagrammi nii, et lisaks riigi nimele esitatakse interaktiivselt ka näiteks riigi rahvaarv.
+
+```{r echo = TRUE}
+ggplotly(gm_plot, tooltip = "text")
+```
+
+Pange tähele, et kõik detailid siiski interaktiivsele joonisele üle ei kandu, nt rahvaarvu väärtusi legendis ei näidata, ilmselt plotly ei näita seal lihtsalt arvulise tunnuse väärtusi, see tuleks eraldi seadistada. Ka kontinentide nimed esitatakse ikkagi ingliskeelsetena, eestikeelsed nimed tuleks funktsiooniga ggplotly eraldi seadistada või kodeerida andmestikus `gm` eelnevalt tunnus `continent` ümber eestikeelseks.
+
+
+```{r eval = FALSE}
+ggplot(ee10, aes(x = as.factor(gincdif))) +
+  geom_bar()
+```
+
+
+```{r eval = FALSE}
+salaries <- Salaries
+
+ggplot(salaries, aes(yrs.service, salary)) +
+  geom_point(alpha = 0.2)
+
+ggplot(salaries, aes(rank, salary)) +
+  geom_count()
+```
+

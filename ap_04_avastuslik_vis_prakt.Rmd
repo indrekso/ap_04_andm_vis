@@ -1,0 +1,392 @@
+---
+title: "Avastuslik visualiseerimine"
+author: "Indrek Soidla"
+institute: "Tartu Ülikool, ühiskonnateaduste instituut"
+date: "2023/10/02 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    self_contained: true
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+# Andmete visualiseerimise liigid
+
+- Avastuslik visualiseerimine
+
+- Seletav visualiseerimine
+
+---
+
+# Avastuslik visualiseerimine
+
+- Tsükliline protsess
+
+--
+
+  - Sõnasta andmete kohta küsimus(ed)
+
+--
+
+  - Otsi andmeid visualiseerides ja töödeldes küsimustele vastuseid
+
+--
+
+  - Täpsusta/täienda küsimusi, lähtudes saadud teadmistest
+
+--
+
+- Fookus võib olla 
+
+--
+
+  - tehnilistel aspektidel, andmekvaliteedil või
+
+--
+
+  - sisulistel küsimustel, 
+
+--
+
+  - aga enamasti täiendavad need kaks poolt teineteist
+
+---
+
+# Võimalikud küsimused
+
+- Küsimused võivad olla sõnastatud väga erinevalt
+
+- Suur osa küsimustest taanduvad kahele küsimuste tüübile
+
+- Kuidas minu tunnused jaotuvad *(variation)*?
+
+- Milline on minu tunnuste koosvarieeruvus *(covariance)*?
+
+--
+
+- Sellistele küsimustele on võimalik vastata erinevate meetoditega
+
+  - Saab nt kasutada jaotusparameetreid, arvutada seosekordajaid
+  
+  - Üldisemalt nimetatakse seda avastuslikuks analüüsiks *(Exploratory Data Analysis)*
+  
+  - Kui püüame neile küsimustele vastata andmete visualiseerimise teel, saab seda nimetada avastuslikuks visualiseerimiseks
+  
+  - Ei pea andmete visualiseerimist kasutama, 
+  
+  - aga tihti võimaldab visualiseerimine näha rohkemat kui üksikud näitajad / kordajad  võimaldaksid
+
+---
+
+class: center, middle, inverse
+
+# Tunnuse jaotus
+## Arvulised tunnused
+
+---
+
+# Põhilised küsimused
+
+- Millised väärtused on kõige tavalisemad / sagedasemad?
+
+- Millised väärtused on kõige harvemad? Kas see langeb kokku sellega, mida oleksid oodanud?
+
+- Millised väärtused tekitavad kahtlusi?
+
+- Kas tunnuse jaotuses on midagi ebatavalist? Erandlikke väärtusi? 
+
+- Mis võiks seda seletada?
+
+---
+
+# Tunnuse jaotus: histogramm
+
+.pull-left[
+```{r hist_iaglptn, eval = FALSE}
+library(haven)
+r9 <- read_spss("data/ESS9e03_1.sav")
+library(tidyverse)
+r9 %>% 
+  filter(cntry == "EE") %>% 
+  ggplot(aes(x = iaglptn)) +
+  geom_histogram()
+```
+]
+
+.pull-right[
+```{r ref.label = "hist_iaglptn", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Kas tunnuse jaotuses on midagi ebatavalist? Kas midagi tekitab kahtlusi?
+
+---
+
+# Tunnuse jaotus: histogramm
+
+.pull-left[
+```{r hist_iaglptn_filt, eval = FALSE}
+r9 %>% 
+  filter(cntry == "EE" &
+           iaglptn > 0 &
+           iaglptn < 50) %>% 
+  ggplot(aes(x = iaglptn)) +
+  geom_histogram()
+```
+]
+
+.pull-right[
+```{r ref.label = "hist_iaglptn_filt", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Millised on kõige sagedasemad väärtused?
+
+--
+
+- Mitmetipuline jaotus => võiks tunnuse analüüsiks kategoriseerida
+
+---
+# Tunnuse jaotus: histogramm
+
+.pull-left[
+```{r hist_iaglptn_filt_bins, eval = FALSE}
+r9 %>% 
+  filter(cntry == "EE" &
+           iaglptn > 0 &
+           iaglptn < 50) %>% 
+  ggplot(aes(x = iaglptn)) +
+  geom_histogram(bins = 27) #<<
+```
+]
+
+.pull-right[
+```{r ref.label = "hist_iaglptn_filt_bins", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Kas esineb erandlikke väärtuseid?
+
+---
+ 
+# Tunnuse jaotus: tihedusjaotus
+
+.pull-left[
+```{r dens_iaglptn_filt, eval = FALSE}
+r9 %>% 
+  filter(cntry == "EE" &
+           iaglptn > 0 &
+           iaglptn < 50) %>% 
+  ggplot(aes(x = iaglptn)) +
+  geom_density()
+```
+]
+
+.pull-right[
+```{r ref.label = "dens_iaglptn_filt", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Tihedusjaotus annab antud juhul esialgse ülevaate tunnuse jaotusest, aga võib diskreetse tunnuse puhul jätta mõnevõrra eksitava mulje
+
+- Sobib pigem pideva tunnuse puhul / tunnuse puhul, kus on palju erinevaid väärtuseid
+
+---
+# Tunnuse jaotus: tihedusjaotus
+
+.pull-left[
+```{r dens_grspnum, eval = FALSE}
+ee9 <- r9 %>% 
+  filter(cntry == "EE")
+
+ggplot(ee9, aes(x = grspnum)) +
+  geom_density(fill = "blue")
+```
+]
+
+.pull-right[
+```{r ref.label = "dens_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Harjutus 1
+
+- Uuri Eesti vastajate töötasude jaotust (tunnus `grspnum`) histogrammi abil. Mida saad siit teada, mis tihedusjaotuse jooniselt jääb märkamata? Proovi ka erineva laiusega tulpasid (argumendid `binwidth` ja `bins`).
+
+- Millised on sagedasemad väärtused? Mida see ütleb vastuste täpsuse kohta?
+
+- Kuidas tõlgendada väärtuseid 0?
+
+- Milline on jaotuse kuju? Milline praktiline tähendus on sellel andmete tõlgendamisel?
+
+---
+
+# Tunnuse jaotus: tihedusjaotus grupiti *(ridge plot)*
+
+.pull-left[
+```{r ridge_grspnum, eval = FALSE}
+library(ggridges)
+ee9_plus <- r9 %>%
+  filter(cntry %in%
+           c("EE", "LV", 
+             "PT", "SI", 
+             "SK"))
+ggplot(ee9_plus, 
+       aes(x = grspnum, 
+           y = cntry)) +
+  geom_density_ridges()
+```
+]
+
+.pull-right[
+```{r ref.label = "ridge_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Tunnuse jaotus: viiuldiagramm
+
+.pull-left[
+```{r violin_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_violin()
+```
+]
+
+.pull-right[
+```{r ref.label = "violin_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Kas tunnuse jaotuses esineb erindeid? Kui palju?
+
+---
+
+# Tunnuse jaotus: karpdiagramm
+
+.pull-left[
+```{r box_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_boxplot()
+```
+
+- Keskmine rasvasem kriips -- mediaan
+
+- Karbi "kaaned" -- ülemine ja alumine kvartiil / kvartiilhaare
+
+- Vurrud -- 1,5x kvartiilhaare
+
+- Üksikud andmepunktid -- erindid
+]
+
+.pull-right[
+```{r ref.label = "box_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Tunnuse jaotus: punktdiagramm
+
+.pull-left[
+```{r point_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_point()
+```
+]
+
+.pull-right[
+```{r ref.label = "point_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Kattuvad punktid - kui palju? Kus?
+
+---
+
+# Tunnuse jaotus: punktdiagramm
+
+.pull-left[
+```{r count_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_count(alpha = 0.2) #<<
+```
+]
+
+.pull-right[
+```{r ref.label = "count_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Tunnuse jaotus: punktdiagramm hajutusega
+
+.pull-left[
+```{r jitter_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_jitter(alpha = 0.5, width = 0.25, height = 100) #<<
+```
+]
+
+.pull-right[
+```{r ref.label = "jitter_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Tunnuse jaotus: viiuldiagramm koos punktidega
+
+.pull-left[
+```{r violin_jitter_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_violin() + #<<
+  geom_jitter(alpha = 0.2, width = 0.1, height = 100) #<<
+```
+]
+
+.pull-right[
+```{r ref.label = "violin_jitter_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Harjutus 2
+
+- Milline on Eesti sissetulekute jaotuses erindite piir?
+
+- Kuivõrd mõjutavad erandlikult suured sissetulekud aritmeetilist keskmist?
+
+- Mida erandlikult suurte sissetulekutega analüüsis teha? Kas oleks põhjendatud nende analüüsist eemaldamine? Millisel juhul?
+
+# Harjutus 3
+
+- Kui palju on erandlikult suure sissetulekuga indiviide?
+
+- Kui palju on neid meeste, kui palju naiste seas?
+
+- Kui palju on neid regiooniti?

@@ -1,0 +1,948 @@
+---
+title: "Avastuslik visualiseerimine"
+author: "Indrek Soidla"
+institute: "Tartu Ülikool, ühiskonnateaduste instituut"
+date: "2023/10/02 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    self_contained: true
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(fig.dim=c(4.8, 4.5), fig.retina=2, out.width="100%")
+```
+
+# Andmete visualiseerimise liigid
+
+- Avastuslik visualiseerimine
+
+- Seletav visualiseerimine
+
+---
+
+# Avastuslik visualiseerimine
+
+- Tsükliline protsess
+
+--
+
+  - Sõnasta andmete kohta küsimus(ed)
+
+--
+
+  - Otsi andmeid visualiseerides ja töödeldes küsimustele vastuseid
+
+--
+
+  - Täpsusta/täienda küsimusi, lähtudes saadud teadmistest
+
+--
+
+- Fookus võib olla 
+
+--
+
+  - tehnilistel aspektidel, andmekvaliteedil või
+
+--
+
+  - sisulistel küsimustel, 
+
+--
+
+  - aga enamasti täiendavad need kaks poolt teineteist
+
+---
+
+# Võimalikud küsimused
+
+- Küsimused võivad olla sõnastatud väga erinevalt
+
+- Suur osa küsimustest taanduvad kahele küsimuste tüübile
+
+- Kuidas minu tunnused jaotuvad *(variation)*?
+
+- Milline on minu tunnuste koosvarieeruvus *(covariance)*?
+
+--
+
+- Sellistele küsimustele on võimalik vastata erinevate meetoditega
+
+  - Saab nt kasutada jaotusparameetreid, arvutada seosekordajaid
+  
+  - Üldisemalt nimetatakse seda avastuslikuks analüüsiks *(Exploratory Data Analysis)*
+  
+  - Kui püüame neile küsimustele vastata andmete visualiseerimise teel, saab seda nimetada avastuslikuks visualiseerimiseks
+  
+  - Ei pea andmete visualiseerimist kasutama, 
+  
+  - aga tihti võimaldab visualiseerimine näha rohkemat kui üksikud näitajad / kordajad  võimaldaksid
+
+---
+
+class: center, middle, inverse
+
+# Tunnuse jaotus
+## Arvulised tunnused
+
+---
+
+# Põhilised küsimused
+
+- Millised väärtused on kõige tavalisemad / sagedasemad?
+
+- Millised väärtused on kõige harvemad? Kas see langeb kokku sellega, mida oleksid oodanud?
+
+- Millised väärtused tekitavad kahtlusi?
+
+- Kas tunnuse jaotuses on midagi ebatavalist? Erandlikke väärtusi? 
+
+- Mis võiks seda seletada?
+
+---
+
+# Tunnuse jaotus: histogramm
+
+.pull-left[
+```{r hist_iaglptn, eval = FALSE}
+library(haven)
+r9 <- read_spss("data/ESS9e03_1.sav")
+library(tidyverse)
+r9 %>% 
+  filter(cntry == "EE") %>% 
+  ggplot(aes(x = iaglptn)) +
+  geom_histogram()
+```
+]
+
+.pull-right[
+```{r ref.label = "hist_iaglptn", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Kas tunnuse jaotuses on midagi ebatavalist? Kas midagi tekitab kahtlusi?
+
+---
+
+# Tunnuse jaotus: histogramm
+
+.pull-left[
+```{r hist_iaglptn_filt, eval = FALSE}
+r9 %>% 
+  filter(cntry == "EE" &
+           iaglptn > 0 &
+           iaglptn < 50) %>% 
+  ggplot(aes(x = iaglptn)) +
+  geom_histogram()
+```
+]
+
+.pull-right[
+```{r ref.label = "hist_iaglptn_filt", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Millised on kõige sagedasemad väärtused?
+
+--
+
+- Mitmetipuline jaotus => võiks tunnuse analüüsiks kategoriseerida
+
+---
+# Tunnuse jaotus: histogramm
+
+.pull-left[
+```{r hist_iaglptn_filt_bins, eval = FALSE}
+r9 %>% 
+  filter(cntry == "EE" &
+           iaglptn > 0 &
+           iaglptn < 50) %>% 
+  ggplot(aes(x = iaglptn)) +
+  geom_histogram(bins = 27) #<<
+```
+]
+
+.pull-right[
+```{r ref.label = "hist_iaglptn_filt_bins", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Kas esineb erandlikke väärtuseid?
+
+---
+ 
+# Tunnuse jaotus: tihedusjaotus
+
+.pull-left[
+```{r dens_iaglptn_filt, eval = FALSE}
+r9 %>% 
+  filter(cntry == "EE" &
+           iaglptn > 0 &
+           iaglptn < 50) %>% 
+  ggplot(aes(x = iaglptn)) +
+  geom_density()
+```
+]
+
+.pull-right[
+```{r ref.label = "dens_iaglptn_filt", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Tihedusjaotus annab antud juhul esialgse ülevaate tunnuse jaotusest, aga võib diskreetse tunnuse puhul jätta mõnevõrra eksitava mulje
+
+- Sobib pigem pideva tunnuse puhul / tunnuse puhul, kus on palju erinevaid väärtuseid
+
+---
+# Tunnuse jaotus: tihedusjaotus
+
+.pull-left[
+```{r dens_grspnum, eval = FALSE}
+ee9 <- r9 %>% 
+  filter(cntry == "EE")
+
+ggplot(ee9, aes(x = grspnum)) +
+  geom_density(fill = "blue")
+```
+]
+
+.pull-right[
+```{r ref.label = "dens_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Harjutus 1
+
+- Uuri Eesti vastajate töötasude jaotust (tunnus `grspnum`) histogrammi abil. Mida saad siit teada, mis tihedusjaotuse jooniselt jääb märkamata? Proovi ka erineva laiusega tulpasid (argumendid `binwidth` ja `bins`).
+
+- Millised on sagedasemad väärtused? Mida see ütleb vastuste täpsuse kohta?
+
+- Kuidas tõlgendada väärtuseid 0?
+
+- Milline on jaotuse kuju? Milline praktiline tähendus on sellel andmete tõlgendamisel?
+
+---
+
+# Harjutus 1
+
+.pull-left[
+```{r ex1_1, echo = FALSE}
+ggplot(ee9, aes(x = grspnum)) +
+  geom_histogram(binwidth = 500)
+```
+]
+
+.pull-right[
+```{r ref.label = "ex1_1", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Harjutus 1
+
+.pull-left[
+```{r ex1_2, echo = FALSE}
+ggplot(ee9, aes(x = grspnum)) +
+  geom_histogram(binwidth = 250)
+```
+]
+
+.pull-right[
+```{r ref.label = "ex1_2", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Harjutus 1
+
+.pull-left[
+```{r ex1_3, echo = FALSE}
+ggplot(ee9, aes(x = grspnum)) +
+  geom_histogram(binwidth = 100)
+```
+]
+
+.pull-right[
+```{r ref.label = "ex1_3", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Harjutus 1
+
+.pull-left[
+```{r ex1_4, echo = FALSE}
+ggplot(ee9, aes(x = grspnum)) +
+  geom_histogram(binwidth = 10)
+```
+]
+
+.pull-right[
+```{r ref.label = "ex1_4", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+# Tunnuse jaotus: tihedusjaotus grupiti *(ridge plot)*
+
+.pull-left[
+```{r ridge_grspnum, eval = FALSE}
+library(ggridges)
+ee9_plus <- r9 %>%
+  filter(cntry %in%
+           c("EE", "LV", 
+             "PT", "SI", 
+             "SK"))
+ggplot(ee9_plus, 
+       aes(x = grspnum, 
+           y = cntry)) +
+  geom_density_ridges()
+```
+]
+
+.pull-right[
+```{r ref.label = "ridge_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Tunnuse jaotus: viiuldiagramm
+
+.pull-left[
+```{r violin_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_violin()
+```
+]
+
+.pull-right[
+```{r ref.label = "violin_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Kas tunnuse jaotuses esineb erindeid? Kui palju?
+
+---
+
+# Tunnuse jaotus: karpdiagramm
+
+.pull-left[
+```{r box_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_boxplot()
+```
+
+- Keskmine rasvasem kriips -- mediaan
+
+- Karbi "kaaned" -- ülemine ja alumine kvartiil / kvartiilhaare
+
+- Vurrud -- 1,5x kvartiilhaare
+
+- Üksikud andmepunktid -- erindid
+]
+
+.pull-right[
+```{r ref.label = "box_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Tunnuse jaotus: punktdiagramm
+
+.pull-left[
+```{r point_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_point()
+```
+]
+
+.pull-right[
+```{r ref.label = "point_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+- Kattuvad punktid - kui palju? Kus?
+
+---
+
+# Tunnuse jaotus: punktdiagramm
+
+.pull-left[
+```{r count_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_count(alpha = 0.2) #<<
+```
+]
+
+.pull-right[
+```{r ref.label = "count_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Tunnuse jaotus: punktdiagramm hajutusega
+
+.pull-left[
+```{r jitter_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_jitter(alpha = 0.5, width = 0.25, height = 100) #<<
+```
+]
+
+.pull-right[
+```{r ref.label = "jitter_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Tunnuse jaotus: viiuldiagramm koos punktidega
+
+.pull-left[
+```{r violin_jitter_grspnum, eval = FALSE}
+ggplot(ee9_plus,
+       aes(x = cntry, 
+           y = grspnum)) +
+  geom_violin() + #<<
+  geom_jitter(alpha = 0.2, #<<
+              width = 0.1, #<<
+              height = 100) #<<
+```
+]
+
+.pull-right[
+```{r ref.label = "violin_jitter_grspnum", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Harjutus 2
+
+- Milline on Eesti sissetulekute jaotuses erindite piir?
+
+- Kuivõrd mõjutavad erandlikult suured sissetulekud aritmeetilist keskmist?
+
+- Mida erandlikult suurte sissetulekutega analüüsis teha? Kas oleks põhjendatud nende analüüsist eemaldamine? Millisel juhul?
+
+# Harjutus 3
+
+- Kui palju on erandlikult suure sissetulekuga indiviide?
+
+- Kui palju on neid meeste, kui palju naiste seas?
+
+- Kui palju on neid regiooniti?
+
+---
+
+class: center, middle, inverse
+
+# Tunnuse jaotus
+## Kategoriaalsed tunnused
+
+---
+
+# Tunnuse jaotus: tulpdiagramm
+
+```{r bar_hincfel, eval = FALSE}
+ee9 %>% 
+  #drop_na(hincfel) %>% 
+ggplot(aes(x = after_stat(prop), 
+           y = as_factor(hincfel), 
+           group = 1,
+           weight = pspwght)) +
+  geom_bar() +
+  scale_y_discrete(limits = rev)
+```
+
+---
+
+# Tunnuse jaotus: tulpdiagramm
+
+```{r ref.label = "bar_hincfel", fig.dim = c(4.8, 2.5), message = FALSE, warning = FALSE, echo = FALSE}
+```
+
+---
+
+# Tunnuse jaotus: sektordiagramm
+
+.pull-left[
+
+- Põhimõtteliselt summatulpdiagramm, mis keeratakse sektoriteks
+
+```{r pie_hincfel_bar, eval = FALSE}
+hincfel_barplot <- ee9 %>% 
+  drop_na(hincfel) %>% 
+  ggplot(aes(x = factor(1), 
+             fill = as_factor(hincfel),
+             weight = pspwght)) +
+  geom_bar()
+
+hincfel_barplot
+```
+]
+
+.pull-right[
+```{r ref.label = "pie_hincfel_bar", message = FALSE, warning = FALSE, echo = FALSE}
+```
+]
+
+---
+
+# Tunnuse jaotus: sektordiagramm
+
+.pull-left[
+
+- Summatulpdiagramm sektoriteks:
+
+```{r pie_hincfel, eval = FALSE}
+hincfel_barplot +
+  coord_polar(theta = "y") +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(ncol = 1))
+```
+]
+
+.pull-right[
+```{r ref.label = "pie_hincfel", fig.dim = c(3.8, 5.5), message = FALSE, warning = FALSE, echo = FALSE}
+```
+
+]
+
+---
+
+# Tunnuse jaotus: sektordiagramm: %
+
+- Protsentide esitamine on ilmselt lihtsam, kui arvutame protsendid ise välja ja anname `ggplot`ile sisendiks protsentjaotuse, mitte indiviidi tasandil andmestiku
+
+```{r}
+hincfel_jaotus <- ee9 %>% 
+  drop_na(hincfel) %>% 
+  count(hincfel, wt = pspwght) %>% 
+  mutate(osakaal = n / sum(n) * 100,
+         osakaal = round(osakaal, 0))
+```
+
+- Kasutame siin `geom_bar` asemel `geom_col` - esimene on mõeldud indiviidi tasandil andmete visualiseerimiseks, teine väljaarvutatud jaotuse visualiseerimiseks
+
+```{r pie_hincfel_perc, eval = FALSE}
+ggplot(hincfel_jaotus, 
+       aes(x = factor(1), y = osakaal, 
+           fill = as_factor(hincfel))) +
+  geom_col() + #<<
+  geom_label(aes(label = osakaal), 
+             position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y")
+```
+
+---
+
+# Tunnuse jaotus: sektordiagramm: %
+
+```{r ref.label = "pie_hincfel_perc", fig.dim = c(4.8, 2.5), message = FALSE, warning = FALSE, echo = FALSE}
+```
+
+---
+
+# Tunnuse jaotus: *treemap*
+
+- `treemapify::geom_treemap` soovib sisendiks mitte indiviidi tasandi andmeid, vaid eelnevalt välja arvutatud jaotust
+
+- Muudame saadud jaotustabelis veeru `hincsrca` faktoriks ja reastame kategooriad ümber nende sageduse järgi
+
+```{r sisset_allikad}
+sisset_allikad <- ee9 %>% 
+  count(hincsrca, wt = pspwght) %>% arrange(desc(n)) %>% 
+  mutate(hincsrca = as_factor(hincsrca),
+         hincsrca = fct_reorder(hincsrca, n))
+sisset_allikad
+```
+
+---
+
+# Tunnuse jaotus: *treemap*
+
+```{r treemap, eval = FALSE}
+library(treemapify)
+ggplot(sisset_allikad, aes(area = n, fill = hincsrca)) +
+  geom_treemap() + #<<
+  guides(fill = guide_legend(reverse=TRUE))
+```
+
+```{r ref.label = "treemap", fig.dim = c(7, 3.25), echo = FALSE, warning = FALSE}
+```
+
+---
+
+# Harjutus 1
+
+- Laadige Moodle'st alla Eesti ESS 2.-10. laine andmestik
+
+- Laadige andmestik R-i
+
+- Koostage tulpdiagrammid tunnuse `region` jaotusega, sealjuures
+
+  - tehes iga küsitlusvooru kohta (tunnus `essround`) eraldi tulpdiagrammi (funktsiooniga `facet_wrap`) ja
+  
+  - kasutades kaalutud jaotuseid
+  
+- Miks lainete 2-4 kohta tulpdiagrammid puuduvad?
+
+- Uurige Euroopa Sotsiaaluuringu andmeportaalist küsitluslaine 2, 3, või 4 andmeprotokollist infot regiooni tunnuse kohta. Kas andmed vastaja regiooni kohta võiksid andmestikus siiski leiduda?
+
+- Kui leidsite andmestikust regiooni andmed ka 2.-4. küsitluslaine kohta, püüdke need ühendada tunnusega `region` ja koostada algne diagramm kõigi küsitluslainete andmetega
+
+---
+
+class: center, middle, inverse
+
+# Tunnuste koosvarieeruvus
+
+---
+
+# Tunnuste koosvarieeruvus: hajuvusdiagramm
+
+- Kas riigi majanduslik areng on seotud keskmise oodatava elueaga? 
+
+- Kuidas?
+
+```{r scatter, eval = FALSE, warning = FALSE}
+library(gapminder)
+gm <- gapminder %>% 
+  filter(year == 2007)
+
+ggplot(gm, aes(gdpPercap, lifeExp, colour = continent)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "SKT elaniku kohta",
+       y = "Keskmine oodatav eluiga sünnil",
+       colour = "Kontinent") +
+  scale_colour_discrete(labels = c("Aafrika", 
+                                   "Ameerika", 
+                                   "Aasia", 
+                                   "Euroopa", 
+                                   "Okeaania"))
+  
+```
+
+---
+
+# Tunnuste koosvarieeruvus: hajuvusdiagramm
+
+```{r ref.label = "scatter", fig.dim = c(7, 4.25), echo = FALSE}
+```
+
+---
+
+# Tunnuste koosvarieeruvus: mulldiagramm
+
+- Aafrikas on kaks riikide gruppi, mis teistest eristuvad
+
+- Kas see võib olla seotud riikide rahvaarvuga?
+
+```{r bubble, eval = FALSE}
+ggplot(gm, aes(gdpPercap, lifeExp, size = pop, colour = continent)) + #<<
+  geom_point(alpha = 0.5) +
+  labs(x = "SKT elaniku kohta",
+       y = "Keskmine oodatav eluiga sünnil",
+       size = "Rahvaarv",
+       colour = "Kontinent") +
+  scale_colour_discrete(labels = c("Aafrika", "Ameerika", "Aasia", "Euroopa", "Okeaania"))
+```
+
+---
+
+# Tunnuste koosvarieeruvus: mulldiagramm
+
+```{r ref.label = "bubble", fig.dim = c(7, 4.5), echo = FALSE}
+```
+
+---
+
+# Tunnuste koosvarieeruvus: mulldiagramm
+
+- Eristuvate riikide seas on nii väikese kui suurema rahvaarvuga riike
+
+- Mis riikidega on tegu? 
+
+  - Lisame riikide nimed, aga ainult neile riikidele, et joonis kirjuks ei läheks
+
+```{r bubble_text, eval = FALSE}
+ggplot(gm, aes(gdpPercap, lifeExp, colour = continent)) +
+  geom_point(alpha = 0.5, aes(size = pop)) + #<<
+  labs(x = "SKT elaniku kohta",
+       y = "Keskmine oodatav eluiga sünnil",
+       size = "Rahvaarv",
+       colour = "Kontinent") +
+  scale_colour_discrete(labels = c("Aafrika", "Ameerika", "Aasia", "Euroopa", "Okeaania")) +
+  geom_text(gm %>% #<<
+              filter(continent == "Africa" & #<<
+                       (gdpPercap > 7500 | lifeExp > 70)), #<<
+            mapping = aes(label = country), #<<
+            size = 4, hjust = 0, nudge_x = 700) #<<
+```
+
+---
+
+# Tunnuste koosvarieeruvus: mulldiagramm
+
+```{r ref.label = "bubble_text", fig.dim = c(7, 4.5), echo = FALSE}
+```
+
+---
+
+# Tunnuste koosvarieeruvus: mulldiagramm
+
+- Osade riikide nimed siiski kattuvad
+
+- Hajutamiseks kasutame funktsiooni `ggrepel::geom_text_repel`
+
+```{r bubble_text_repel, fig.show = "hide"}
+library(ggrepel) #<<
+ggplot(gm, aes(gdpPercap, lifeExp, colour = continent)) +
+  geom_point(alpha = 0.5, aes(size = pop)) +
+  labs(x = "SKT elaniku kohta",
+       y = "Keskmine oodatav eluiga sünnil",
+       size = "Rahvaarv",
+       colour = "Kontinent") +
+  scale_colour_discrete(labels = c("Aafrika", "Ameerika", "Aasia", "Euroopa", "Okeaania")) +
+  geom_text_repel(gm %>% #<<
+                    filter(continent == "Africa" &
+                             (gdpPercap > 7500 | lifeExp > 70)),
+                  mapping = aes(label = country), 
+                  size = 4, hjust = 0, nudge_x = 700)
+```
+
+---
+
+# Tunnuste koosvarieeruvus: mulldiagramm
+
+```{r ref.label = "bubble_text_repel", fig.dim = c(7, 4.5), echo = FALSE}
+```
+
+---
+
+# Harjutus 2
+
+- Tooge diagrammil tumedamate punktidena välja Soome, Rootsi, Norra ja Taani
+
+- Lisage neile punktidele ka nimed
+
+---
+
+# Tunnuste koosvarieeruvus: maatriks *(heat map)*
+
+- Kasutame pressivabaduse indeksi andmestikku (teemast Sissejuhatus R-i)
+
+- Lähis-Ida ja Põhja-Aafrika riikide pressivabaduse tase on üldiselt madal, aga kuidas riigid erinevad indeksi alaosade lõikes? Kas pressivabaduse tase on üldiselt madal, või mingites konkreetsetes alaindeksites?
+
+```{r heat, eval = FALSE}
+pfi <- read.csv2(file = "data/rsf_2022.csv", encoding = "UTF-8")
+rownames(pfi) <- pfi$country
+pfi_eur <- pfi %>% 
+  filter(zone == "MENA") %>% 
+  select(global_score:safety)
+
+library(superheat)
+superheat(pfi_eur)
+```
+
+---
+
+# Tunnuste koosvarieeruvus: maatriks *(heat map)*
+
+```{r ref.label = "heat", echo = FALSE, fig.dim = c(7.5, 4.25), out.height = "100%", warning = FALSE}
+```
+
+---
+
+# Tunnuste koosvarieeruvus: maatriks *(heat map)*
+
+- Reastame riigid üldindeksi järgi, lisame informatiivsed tunnuste nimed, muudame kirjasuurust
+
+- `\n` tähendab sõnes reavahetust
+
+```{r heat_upd, eval = FALSE}
+names(pfi_eur) <- c("Global\nscore", "Political\ncontext", 
+                    "Economic\ncontext", "Legal\nframework", 
+                    "Sociocultural\ncontext", "Safety")
+
+superheat(pfi_eur,
+          order.rows = order(pfi_eur[1]),
+          left.label.text.size=3,
+          bottom.label.text.size=3)
+```
+
+---
+
+# Tunnuste koosvarieeruvus: maatriks *(heat map)*
+
+```{r ref.label = "heat_upd", echo = FALSE, fig.dim = c(7.5, 4.25), out.height = "100%", warning = FALSE}
+```
+
+---
+
+# Harjutus 3
+
+- Laadige R-i ESS 9. laine andmed (kõik riigid)
+
+- Arvutage riigiti aritmeetilised keskmised järgmistele tunnustele:
+
+  - eluga rahulolu (stflife),
+  - usaldus parlamendi vastu (trstprl),
+  - usaldus poliitikute vastu (trstplt),
+  - usaldus politsei vastu (trstplc),
+  - religioossus (rlgdgr)
+
+- Pange arvutatud näitajad maatriksile
+
+- Töödelge maatriksit nii, et see oleks lugejale arusaadav
+
+---
+
+# Tunnuste koosvarieeruvus: summatulpdiagramm
+
+- Võtame aluseks eelmise nädala näite
+
+- Uurime, kas meeste ja naiste arvamus sellest, kas valitsus peaks vähendama sissetulekute ebavõrdsust, erineb
+
+```{r}
+ee9 <- ee9 %>% 
+  mutate(gincdif = recode(as.factor(gincdif),
+                          "1" = "Täiesti nõus",
+                          "2" = "Nõus",
+                          "3" = "Ei ole nõus ega vastu",
+                          "4" = "Ei ole nõus",
+                          "5" = "Ei ole üldse nõus"),
+         gndr = recode(as.factor(gndr), 
+                       "1" = "Mees",
+                       "2" = "Naine"))
+```
+
+---
+
+# Tunnuste koosvarieeruvus: summatulpdiagramm
+
+```{r stacked_perc, eval = FALSE}
+ee9 %>% 
+  ggplot(aes(x = gincdif, fill = gndr, weight = pspwght)) +
+    geom_bar(position = "fill") +
+      labs(title = "Valitsus peaks rakendama abinõusid, vähendamaks erinevusi sissetulekute \ntasemes: hinnangute protsentjaotus soo lõikes",
+           subtitle = "Euroopa Sotsiaaluuringu 2018. aasta Eesti andmed",
+           x = "Nõustumine väitega",
+           y = "Osakaal",
+         fill = "Sugu")
+```
+
+---
+
+# Tunnuste koosvarieeruvus: summatulpdiagramm
+
+```{r ref.label = "stacked_perc", echo = FALSE, fig.dim = c(7.5, 4.25), out.height = "100%", warning = FALSE}
+```
+
+---
+
+# Tunnuste koosvarieeruvus: summatulpdiagramm
+
+- Aasta 2018 andmete ja antud joonise põhjal tundub, et sooline erinevus on olemas ja see tuleneb eelkõige soolisest jaotusest nende hulgas, kes pole väitega (üldse) nõus
+
+- Huvitav on ka, et mittevastanute seas tundub olevat oluliselt rohkem naisi
+
+- Siinkohal on oluline siiski kontrollida, kui palju indiviide on neid vastusevariante valinud
+
+- Enne protsentjaotuste uurimist võiks vaadata ka jaotust indiviidide arvude põhjal
+
+```{r stacked_abs, eval = FALSE}
+ee9 %>% 
+  ggplot(aes(x = gincdif, fill = gndr, weight = pspwght)) +
+    geom_bar(position = "stack") + #<<
+      labs(title = "Valitsus peaks rakendama abinõusid, vähendamaks erinevusi sissetulekute \ntasemes: hinnangute protsentjaotus",
+           subtitle = "Euroopa Sotsiaaluuringu 2018. aasta Eesti andmed",
+           x = "Nõustumine väitega",
+           y = "Indiviidide arv",
+         fill = "Sugu")
+```
+
+---
+
+# Tunnuste koosvarieeruvus: summatulpdiagramm
+
+```{r ref.label = "stacked_abs", echo = FALSE, fig.dim = c(7.5, 4.25), out.height = "100%", warning = FALSE}
+```
+
+---
+
+# Alternatiiv: tulbad kõrvuti
+
+```{r stacked_dodge, eval = FALSE}
+ee9 %>% 
+  ggplot(aes(x = gincdif, fill = gndr, weight = pspwght)) +
+    geom_bar(position = "dodge") + #<<
+      labs(title = "Valitsus peaks rakendama abinõusid, vähendamaks erinevusi sissetulekute \ntasemes: hinnangute protsentjaotus",
+           subtitle = "Euroopa Sotsiaaluuringu 2018. aasta Eesti andmed",
+           x = "Nõustumine väitega",
+           y = "Indiviidide arv",
+         fill = "Sugu")
+```
+
+---
+
+# Alternatiiv: tulbad kõrvuti
+
+```{r ref.label = "stacked_dodge", echo = FALSE, fig.dim = c(7.5, 4.25), out.height = "100%", warning = FALSE}
+```
+
+---
+
+# Vaatame veel korraks summatulpdiagrammi osakaaludega
+
+```{r ref.label = "stacked_perc", echo = FALSE, fig.dim = c(7.5, 3.5), out.height = "100%", warning = FALSE}
+```
+
+- Siin oleks tegelikult olnud tõlgenduses eksimise vältimiseks parem arvutada protsendid sotsiaaldemograafilise (n-ö objektiivsemalt mõõdetud) tunnuse lõikes
+
+---
+
+# Vahetame x-telje ja värvi tunnused
+
+```{r stacked_perc_flipped, eval = FALSE}
+ee9 %>% 
+  ggplot(aes(x = gndr, fill = gincdif, weight = pspwght)) + #<<
+    geom_bar(position = "fill") +
+      labs(title = "Valitsus peaks rakendama abinõusid, vähendamaks erinevusi sissetulekute \ntasemes: hinnangute protsentjaotus soo lõikes",
+           subtitle = "Euroopa Sotsiaaluuringu 2018. aasta Eesti andmed",
+           x = "Nõustumine väitega",
+           y = "Sugu",
+         fill = "Osakaal")
+```
+
+---
+
+# Vahetame x-telje ja värvi tunnused
+
+```{r ref.label = "stacked_perc_flipped", echo = FALSE, fig.dim = c(6, 4.25), out.height = "100%", warning = FALSE}
+```
