@@ -1,0 +1,38 @@
+---
+title: "Andmestike ümberstruktureerimine"
+author: "Indrek Soidla"
+date: "2023-10-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Laeme sisse paketid
+
+```{r warning = FALSE, message = FALSE}
+library(tidyverse)
+```
+
+
+## Harjutus 4
+
+```{r echo = FALSE}
+toohoive <- read.csv("data/toohoive_lapsevanemad.csv")
+
+toohoive %>% 
+  pivot_wider(names_from = laste_olemasolu,
+              values_from = toohoive) %>% 
+  print(width = Inf, n = 30)
+```
+
+## Harjutus 5
+
+```{r}
+toohoive %>% 
+  pivot_wider(names_from = c(laste_olemasolu, sugu),
+              values_from = toohoive) %>% 
+  DT::datatable()
+```
+

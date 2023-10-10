@@ -258,3 +258,41 @@ vaesus_lai <- vaesus %>%
               values_from = c(suht_vaesus, abs_vaesus))
 vaesus_lai
 ```
+
+---
+
+### Harjutus 4
+
+Laadige R-i Moodle's olev lastevanemate tööhõive andmestik. Selles on erinevas vanuses lastega isade ja emade tööhõive määrad aastatel 1998-2002. Andmestik on pikkformaadis, mis tabelina ei ole kuigi ülevaatlik. Viige andmestik laiformaati, nii et ühe tööhõive määrade veeru asemel oleks eraldi veerud 0-2-aastaste, 3-6-aastaste ja 7-14-aastaste lastega vanemate kohta; andmestikku peaksid jääma alles soo ja vaatlusperioodi tunnused. Andmestik (selle ülemine ots ja neli vasakpoolset veergu) peaks välja nägema selline:
+
+```{r echo = FALSE, eval = TRUE}
+toohoive <- read.csv("data/toohoive_lapsevanemad.csv")
+
+toohoive %>% 
+  pivot_wider(names_from = laste_olemasolu,
+              values_from = toohoive)
+```
+
+---
+
+### Harjutus 5
+
+Tehke andmestik veel lühemaks ja laiemaks nii, et meeste ja naiste kohta oleks andmed eraldi veergudes: 0-2-aastaste, 3-6-aastaste ja 7-14-aastaste lastega emade tööhõive määrad eraldi veergudes ja 0-2-aastaste, 3-6-aastaste ja 7-14-aastaste lastega isade tööhõive määrad eraldi veergudes. Kokku peaks seega andmestikus olema vaatlusperioodi veerg ja kuus tööhõive määrade veergu (selleks tuleb eelnevat koodi ainult natukene muuta).
+
+Nüüd kui andmestik on ülevaatlikum: milline on tööhõive määr erinevas vanuses laste emade ja isade seas 2022. aastal? Kas tööhõive määr on võrreldes varasemaga tõusnud või langenud? Siin võib olla oluline arvestada ka [uuringu metoodikat](https://www.stat.ee/et/eesti-toojou-uuringu-metoodika-muudatused) ja muutusi selles.
+
+Kirjuta vastused ülal olevatele küsimustele kommentaaridena oma skriptifaili. Palun tee seda päriselt ka, meil läheb seda järgnevas osas vaja.
+
+```{r echo = FALSE, eval = TRUE}
+toohoive <- read.csv("data/toohoive_lapsevanemad.csv")
+
+toohoive %>% 
+  pivot_wider(names_from = c(laste_olemasolu, sugu),
+              values_from = toohoive)
+```
+
+---
+
+### Harjutus 6 (lisa)
+
+Kui saite eelnevad ülesanded kiiremini valmis ja jääb aega, mõelge, millise andmestikuga (kas pikk- või laiformaadis) saaks need aegread joonisel esitada. Koostage joonis(ed), kus oleks näha tööhõive määra muutused kõigis kuues grupis.

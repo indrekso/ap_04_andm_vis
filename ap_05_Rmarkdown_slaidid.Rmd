@@ -1,0 +1,165 @@
+---
+title: "Sissejuhatus Rmarkdowni"
+author: "Indrek Soidla"
+institute: "Tartu Ülikool, ühiskonnateaduste instituut"
+date: "2023/10/02 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    self_contained: true
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+### Mis on Rmarkdown?
+
+- [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)
+
+---
+
+### Hädavajalik
+
+- YAML
+
+- Koodijupid *(code chunks)*
+
+  - Korratavus
+
+- Tekst
+
+- Kudumine *(knitting)*
+
+---
+
+### YAML
+
+- [YAML Ain't Markup Language](https://bookdown.org/yihui/rmarkdown/basics.html)
+
+```{r eval = FALSE}
+---
+title: "Rmarkdowni põhialused"
+author: "Indrek Soidla"
+date: "2023-10-10"
+output: html_document
+---
+```
+
+--
+
+- [Sisukorra lisamine](https://bookdown.org/yihui/rmarkdown/html-document.html#table-of-contents)
+
+```{r eval = FALSE}
+---
+title: "Rmarkdowni põhialused"
+author: "Indrek Soidla"
+date: "2023-10-10"
+output: 
+  html_document:
+    toc: true #<<
+    toc_float: true #<<
+    toc_depth: 3 #<<
+---
+```
+
+---
+
+### Koodijupid
+
+- Ctrl + Alt + I
+
+- Olulised seaded (võimalikud väärtused TRUE või FALSE):
+
+  - koodijupi nimi
+
+  - `warning`
+  
+  - `message`
+  
+  - `echo`
+  
+  - `eval`
+  
+- Saab seadistada kogu dokumendile koodijupis `setup`
+
+  - nt `knitr::opts_chunk$set(echo = TRUE)`
+
+---
+
+### Koostage tänaste Rmarkdowni fail tänaste harjutuste koodi ja väljundiga
+
+- Kopeerige harjutuste kood 
+
+- Lisage tekst, mis oli skriptifaili kommentaaridena
+
+  - trellid eest ära: Ctrl + Shift + C
+
+---
+
+### Tekst
+
+- *Plain text*, mida saab [vormindada markdowni abil](https://commonmark.org/help/)
+
+- Nt eelmine punkt markdowni keeles:
+
+```{r eval = FALSE}
+- *Plain text*, mida saab [vormindada markdowni abil](https://commonmark.org/help/)
+```
+
+- Saab ka vormindada nagu Wordis: üleval vasakul `Source | Visual`
+
+---
+
+### Analüüs peab olema reprodutseeritav!
+
+- Pakettide sisselaadimise käsud
+
+- Andmete laadimise käsud, andmestike aadressid peavad olema õiged (projekt!)
+
+- Käsud peavad olema käivitamise järjekorras
+
+- Üksteisest sõltuvad koodi osad peavad olema omavahel vastavuses
+
+---
+
+### Tabelite vormindamine
+
+- tibble'i puhul näidatakse ainult esimesed kümme rida ja nii palju tunnuseid, kui horisontaalselt mahub
+
+- kui soovime rohkem näidata:
+
+  - nt `print(width = Inf, n = 30)`
+  
+- kenama vormindusega tabelid
+  
+  - `knitr::kable()`
+  
+  - `gt::gt()`
+  
+- interaktiivne tabel
+  
+  - `DT::datatable()`
+  
+---
+
+### [Disain](https://bookdown.org/yihui/rmarkdown/html-document.html#appearance-and-style)
+
+```{r eval = FALSE}
+---
+title: "Rmarkdowni põhialused"
+author: "Indrek Soidla"
+date: "2023-10-10"
+output: 
+  html_document:
+    theme: spacelab #<<
+    highlight: tango #<<
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+```
