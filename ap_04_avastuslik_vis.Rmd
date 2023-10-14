@@ -451,11 +451,55 @@ ggplot(ee9_plus,
 
 # Harjutus 3
 
-- Kui palju on erandlikult suure sissetulekuga indiviide?
+- Kui palju on Eesti vastajate seas erandlikult suure sissetulekuga indiviide?
 
 - Kui palju on neid meeste, kui palju naiste seas?
 
 - Kui palju on neid regiooniti?
+
+---
+
+# Harjutus 3
+
+```{r}
+ee9 %>% 
+  filter(grspnum > 3000) %>% 
+  count()
+```
+
+---
+
+# Harjutus 3
+
+```{r}
+ee9 %>% 
+  filter(grspnum > 3000) %>% 
+  count(gndr) %>% 
+  mutate(osakaal = n / sum(n))
+
+ee9 %>% 
+  count(gndr) %>% 
+  mutate(osakaal = n / sum(n))
+```
+
+Mehed üleesindatud, naised alaesindatud
+
+---
+
+# Harjutus 3
+
+```{r}
+ee9 %>% 
+  filter(grspnum > 3000) %>% 
+  count(region) %>% 
+  mutate(osakaal = n / sum(n))
+
+ee9 %>% 
+  count(region) %>% 
+  mutate(osakaal = n / sum(n))
+```
+
+Põhja-Eesti üleesindatud, Kirde-Eesti alaesindatud (seal on sissetulekuga üle 3000 euro null indiviidi)
 
 ---
 

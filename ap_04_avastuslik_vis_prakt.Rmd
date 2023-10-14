@@ -385,7 +385,7 @@ ggplot(ee9_plus,
 
 # Harjutus 3
 
-- Kui palju on erandlikult suure sissetulekuga indiviide?
+- Kui palju on Eesti vastajate seas erandlikult suure sissetulekuga indiviide?
 
 - Kui palju on neid meeste, kui palju naiste seas?
 
