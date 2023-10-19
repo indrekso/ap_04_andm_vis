@@ -1,0 +1,109 @@
+---
+title: "Andmestike ühendamine"
+author: "Indrek Soidla"
+institute: "Tartu Ülikool, ühiskonnateaduste instituut"
+date: "2023/10/16 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    self_contained: true
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+# Harjutus 1
+
+Kaustas `data/scientists` on kolm andmefaili, kus on erinevad andmed kümne maailma muutnud naisteadlase kohta. Uuri nende sisu, mis tunnused mingis failis asuvad. Andmestikud on väikesed, seega saab nende sisu hõlpsalt konsoolis vaadata (käivitada andmestiku nimi).
+
+- Loo andmestik, kus on teadlaste nimed, eriala ja sünni- ja surmakuupäevad
+
+- Loo andmestik, kus on teadlaste nimed, eriala ja sünni- ja surmakuupäevad, aga ainult nende teadlaste kohta, kelle andmed esinevad mõlemas andmestikus (n = 8)
+
+- Leia, millise teadlase kohta on olemas küll eriala, aga puudub info selle kohta, mille poolest ta tuntud on. 
+
+- Lisa vastav info andmestikku mitte manuaalselt, vaid kasutades koodi (nt funktsiooni `case_when`).
+
+- Koonda kõigi andmestike andmed kokku ühte andmestikku
+
+---
+
+# Harjutus 2
+
+Meil on kaustas `data/students` andmed kokanduskursuse kohta: andmestikus `enrolment.csv` on andmed kursusele registreerunute kohta, andmestikus `survey.csv` on andmed tagasisideküsimustikule vastanute kohta. 
+
+Kuidas peaks andmeid ühendama / milliseid ühendamisfunktsioone kasutama, et saada
+
+- teada, kes registreerunutest küsitlusele ei vastanud
+- kes vastas küll tagasisideküsimustikule, aga registreeris ennast kursuselt maha
+
+Kõige lihtsam oleks muidugi andmed lihtsalt andmestikud kokku liita, kaasates mõlema andmestiku andmed, aga see oleks lihtne ainult taolise väikesemahulise andmestiku puhul. Harjutage siin andmestiku väiksusest hoolimata filtreerivate liitmisfunktsioonide kasutamist.
+
+---
+
+# Harjutus 3
+
+Kaustas `data/sales` on andmed kaupade hindade kohta (`prices.csv`) ja kahe kliendi ostuandmed (`purchases.csv`). 
+
+- Kui suure summa eest kokku kaupu osteti?
+
+- Kui suure summa eest ostis kaupu kumbki klient?
+
+---
+
+# Harjutus 4
+
+- Laadige R-i ESS-i 9. ja 10. laine andmestikud
+
+- Arvutage kummagi andmestiku pealt kõigi riikide kohta kaalutud keskmine rahulolu tervishoiusüsteemiga
+
+- Liitke saadud keskmiste andmetabelid kokku
+
+- Milliste 9. laines osalenud riikide puhul puuduvad 10. laine andmed ja vastupidi?
+
+- Koostage kummagi aasta rahulolu keskmistega hajuvusdiagramm
+
+- Lisage diagrammile riikide nimed
+
+---
+
+# Harjutus 5
+
+- Laadige R-i ESS-i 10. laine andmestik ja OECD tervishoiukulude andmestik
+
+- Arvutage ESS-i andmestiku pealt kõigi riikide kohta kaalutud keskmine rahulolu tervishoiusüsteemiga
+
+- Liitke saadud andmetabel OECD tervishoiukulude andmestikuga. Liita tuleb riikide nimede alusel, seega esmalt tuleks ESS-i andmestikus riikide koodid asendada nimedega (nt funktsiooniga as_factor)
+
+- Milliste ESS 10. laines osalenud riikide puhul on andmed OECD andmestikus, millistel need puuduvad? Kui suurel osal ESS riikidest OECD andmed puuduvad?
+
+- Koostage rahulolu keskmistega ja tervishoiukuludega (% SKP-st) hajuvusdiagramm
+
+- Lisage diagrammile riikide nimed
+
+---
+
+# Harjutus 6
+
+- Laadige R-i andmestikud `lotr_1.tsv` ja `lotr_races.tsv`. Failid on *tab separated values* formaadis, mis on analoogne csv-formaadiga, aga eri tunnuste väärtuseid eraldavad mitte komad, vaid tabulaatorid. Failide R-i laadimiseks saab kasutada funktsiooni `read_tsv` paketist `readr` (kui olete sisse lugenud `tidyverse`i paketi, on juba `readr` ka sisse loetud)
+
+  - Esimeses failis on andmed Sõrmuste Isanda triloogia esimese filmi Sõrmuse Vennaskond kohta, kui palju on mingi tegelane mingis episoodis sõna saanud (sõnade arv). Teises on andmed Sõrmuste Isanda triloogia tegelaste kohta, mis rassi mingi tegelane kuulub.
+
+- Kui palju mingi rassi esindajad Sõrmuse Vennaskonna filmis sõna saavad?
+
+- Küsimusele vastamiseks lisage esimese filmi andmetele rassi tunnus ja tehke vajalikud arvutused.
+
+---
+
+# Harjutus 7
+
+- Laadige R-i andmestikud `lotr_2.tsv` ja `lotr_3.tsv`. Nendes samad andmed ka triloogia teise ja kolmanda filmi kohta, rassi tunnus on juba olemas. 
+
+- Millised tegelased on kogu triloogia peale kokku kõige rohkem sõna saanud? Arvutage sõnade arv.
+
+- Kuidas saaks seda ülesannet lahendada? Mis kõige oleks lihtsam?
