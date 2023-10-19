@@ -1,0 +1,679 @@
+---
+title: "Andmestike ühendamine"
+author: "Indrek Soidla"
+institute: "Tartu Ülikool, ühiskonnateaduste instituut"
+date: "2023/10/16 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    self_contained: true
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Harjutus 1
+
+Kaustas `data/scientists` on kolm andmefaili, kus on erinevad andmed kümne maailma muutnud naisteadlase kohta. Uuri nende sisu, mis tunnused mingis failis asuvad. Andmestikud on väikesed, seega saab nende sisu hõlpsalt konsoolis vaadata (käivitada andmestiku nimi).
+
+- Loo andmestik, kus on teadlaste nimed, eriala ja sünni- ja surmakuupäevad
+
+- Loo andmestik, kus on teadlaste nimed, eriala ja sünni- ja surmakuupäevad, aga ainult nende teadlaste kohta, kelle andmed esinevad mõlemas andmestikus (n = 8)
+
+- Leia, millise teadlase kohta on olemas küll eriala, aga puudub info selle kohta, mille poolest ta tuntud on
+
+- Lisa vastav info andmestikku mitte manuaalselt, vaid kasutades koodi (nt funktsiooni `case_when`)
+
+- Koonda kõigi andmestike andmed kokku ühte andmestikku
+
+---
+
+# Harjutus 1
+
+```{r}
+library(tidyverse)
+professions <- read_csv("data/scientists/professions.csv")
+dates <- read_csv("data/scientists/dates.csv")
+works <- read_csv("data/scientists/works.csv")
+```
+
+---
+
+# Harjutus 1
+
+- Loo andmestik, kus on teadlaste nimed, eriala ja sünni- ja surmakuupäevad
+
+```{r}
+professions_dates <- professions %>% 
+  left_join(dates)
+professions_dates
+```
+
+---
+
+# Harjutus 1
+
+- Loo andmestik, kus on teadlaste nimed, eriala ja sünni- ja surmakuupäevad, aga ainult nende teadlaste kohta, kelle andmed esinevad mõlemas andmestikus (n = 8)
+
+```{r}
+professions_dates_8 <- professions %>% 
+  inner_join(dates)
+professions_dates_8
+```
+
+---
+
+# Harjutus 1
+
+- Leia, millise teadlase kohta on olemas küll eriala, aga puudub info selle kohta, mille poolest ta tuntud on
+
+```{r}
+professions %>% 
+  anti_join(works)
+```
+
+---
+
+# Harjutus 1
+
+- Lisa vastav info andmestikku mitte manuaalselt, vaid kasutades koodi (nt funktsiooni `case_when`)
+
+- Koonda kõigi andmestike andmed kokku ühte andmestikku
+
+```{r}
+all_data <- professions %>% 
+  full_join(works)
+all_data
+```
+
+---
+
+# Harjutus 1
+
+- Lisa vastav info andmestikku mitte manuaalselt, vaid kasutades koodi (nt funktsiooni `case_when`)
+
+- Koonda kõigi andmestike andmed kokku ühte andmestikku
+
+```{r}
+all_data <- all_data %>% 
+  mutate(known_for = case_when(name == "Rosalind Franklin" ~ 
+                                 "discovered the double helix structure of DNA",
+         TRUE ~ known_for))
+```
+
+---
+
+# Harjutus 1
+
+- Lisa vastav info andmestikku mitte manuaalselt, vaid kasutades koodi (nt funktsiooni `case_when`)
+
+- Koonda kõigi andmestike andmed kokku ühte andmestikku
+
+```{r}
+all_data <- all_data %>% 
+  full_join(dates)
+all_data
+```
+
+---
+
+# Harjutus 2
+
+Meil on kaustas `data/students` andmed kokanduskursuse kohta: andmestikus `enrolment.csv` on andmed kursusele registreerunute kohta, andmestikus `survey.csv` on andmed tagasisideküsimustikule vastanute kohta. 
+
+Kuidas peaks andmeid ühendama / milliseid ühendamisfunktsioone kasutama, et saada
+
+- teada, kes registreerunutest küsitlusele ei vastanud
+- kes vastas küll tagasisideküsimustikule, aga registreeris ennast kursuselt maha
+
+Kõige lihtsam oleks muidugi andmed lihtsalt andmestikud kokku liita, kaasates mõlema andmestiku andmed, aga see oleks lihtne ainult taolise väikesemahulise andmestiku puhul. Harjutage siin andmestiku väiksusest hoolimata filtreerivate liitmisfunktsioonide kasutamist.
+
+---
+
+# Harjutus 2
+
+```{r}
+enrolment <- read_csv("data/students/enrolment.csv")
+enrolment
+```
+
+---
+
+# Harjutus 2
+
+```{r}
+survey <- read_csv("data/students/survey.csv")
+survey
+```
+
+---
+
+# Harjutus 2
+
+- Kes registreerunutest küsitlusele ei vastanud?
+
+```{r}
+enrolment %>% 
+  anti_join(survey)
+```
+
+- Vastuse saame, aga kas see on ka õige?
+
+- Vaikimisi ühendatakse andmestikud tunnuste järgi, mis on mõlemas andmestikus olemas, st mis on mõlemas andmestikus sama nimega
+
+- Vaikimisi ühendatakse andmestikke seega tunnuste `id` ja name `alusel`
+
+- Ühes andmestikus on tudengi `id == 3` nimi Sura, teises Sura Selvarajah, seega annab eelnev käsk vastuseks, et andmerida, kus `id == 3` ja `name == Sura`, andmestikus `survey` ei leidu, kuigi tunnuse `id` väärtuse järgi ja ka sisuliselt saame aru, et tegu on sama tudengiga
+
+---
+
+# Harjutus 2
+
+- Ühendame andmestiku ainult tunnuse `id` alusel
+
+```{r}
+enrolment %>% 
+  anti_join(survey, by = join_by(id))
+```
+
+- Oluline: 
+
+  - arvuliste tunnuste alusel andmestike ühendamisel on vigade tekkimise oht väiksem
+  
+  - tasub koodi kirja panna võtmetunnused, mille alusel andmestikud ühendame, mitte jääda lootma vaikeseadistusele
+
+---
+
+# Harjutus 2
+
+- Kes vastas küll tagasisideküsimustikule, aga registreeris ennast kursuselt maha?
+
+```{r}
+survey %>% 
+  anti_join(enrolment, by = join_by(id))
+```
+
+---
+
+# Harjutus 3
+
+Kaustas `data/sales` on andmed kaupade hindade kohta (`prices.csv`) ja kahe kliendi ostuandmed (`purchases.csv`). 
+
+- Kui suure summa eest kokku kaupu osteti?
+
+- Kui suure summa eest ostis kaupu kumbki klient?
+
+---
+
+# Harjutus 3
+
+```{r}
+purchases <- read_csv("data/sales/purchases.csv")
+purchases
+```
+
+---
+
+# Harjutus 3
+
+```{r}
+prices <- read_csv("data/sales/prices.csv")
+prices
+```
+
+---
+
+# Harjutus 3
+
+- Kui suure summa eest kokku kaupu osteti?
+
+```{r}
+ostud <- purchases %>%
+  left_join(prices, by = join_by(item))
+ostud
+```
+
+---
+
+# Harjutus 3
+
+- Kui suure summa eest ostis kaupu kumbki klient?
+
+```{r}
+sum(ostud$price)
+```
+
+---
+
+# Harjutus 3
+
+- Kui suure summa eest kokku kaupu osteti?
+
+```{r}
+ostud %>% 
+  group_by(customer_id) %>% 
+  summarise(ostusumma = sum(price))
+```
+
+---
+
+# Harjutus 4
+
+- Laadige R-i ESS-i 9. ja 10. laine andmestikud
+
+- Arvutage kummagi andmestiku pealt kõigi riikide kohta kaalutud keskmine rahulolu tervishoiusüsteemiga
+
+- Liitke saadud keskmiste andmetabelid kokku
+
+- Milliste 9. laines osalenud riikide puhul puuduvad 10. laine andmed ja vastupidi?
+
+- Koostage kummagi aasta rahulolu keskmistega hajuvusdiagramm
+
+- Lisage diagrammile riikide nimed
+
+---
+
+# Harjutus 4
+
+- Laadige R-i ESS-i 9. ja 10. laine andmestikud
+
+```{r}
+library(haven)
+ess9 <- read_spss("data/ESS9e03_1.sav")
+ess10 <- read_spss("data/ess10.sav")
+```
+
+---
+
+# Harjutus 4
+
+- Arvutage kummagi andmestiku pealt kõigi riikide kohta kaalutud keskmine rahulolu tervishoiusüsteemiga
+
+```{r}
+rahulolu_9 <- ess9 %>% 
+  group_by(cntry) %>% 
+  summarise(rah_trv_9 = TAM::weighted_mean(stfhlth, w = pspwght))
+
+rahulolu_10 <- ess10 %>% 
+  group_by(cntry) %>% 
+  summarise(rah_trv_10 = TAM::weighted_mean(stfhlth, w = pspwght))
+```
+
+---
+
+# Harjutus 4
+
+- Milliste 9. laines osalenud riikide puhul puuduvad 10. laine andmed ja vastupidi?
+
+```{r}
+rahulolu_9 %>% 
+  anti_join(rahulolu_10, by = join_by(cntry))
+```
+
+---
+
+# Harjutus 4
+
+- Milliste 9. laines osalenud riikide puhul puuduvad 10. laine andmed ja vastupidi?
+
+```{r}
+rahulolu_10 %>% 
+  anti_join(rahulolu_9, by = join_by(cntry))
+```
+
+---
+
+# Harjutus 4
+
+- Liitke saadud keskmiste andmetabelid kokku
+
+```{r}
+rahulolu <- rahulolu_9 %>% 
+  inner_join(rahulolu_10, by = join_by(cntry))
+rahulolu
+```
+
+---
+
+# Harjutus 4
+
+- Koostage kummagi aasta rahulolu keskmistega hajuvusdiagramm
+
+```{r rahulolu_joonis, eval = FALSE}
+rahulolu %>% 
+  ggplot(aes(rah_trv_9, rah_trv_10)) +
+  geom_point()
+```
+
+---
+
+# Harjutus 4
+
+- Koostage kummagi aasta rahulolu keskmistega hajuvusdiagramm
+
+```{r ref.label = "rahulolu_joonis", echo = FALSE, fig.dim = c(10, 6)}
+```
+
+---
+
+# Harjutus 4
+
+- Lisage diagrammile riikide nimed
+
+```{r rahulolu_joonis_nimed, eval = FALSE}
+rahulolu %>% 
+  ggplot(aes(rah_trv_9, rah_trv_10, label = as_factor(cntry))) +
+  geom_point() +
+  ggrepel::geom_text_repel()
+```
+
+---
+
+# Harjutus 4
+
+- Lisage diagrammile riikide nimed
+
+```{r ref.label = "rahulolu_joonis_nimed", echo = FALSE, fig.dim = c(10, 6)}
+```
+
+---
+
+# Harjutus 5
+
+- Laadige R-i ESS-i 10. laine andmestik ja OECD tervishoiukulude andmestik
+
+- Arvutage ESS-i andmestiku pealt kõigi riikide kohta kaalutud keskmine rahulolu tervishoiusüsteemiga
+
+- Liitke saadud andmetabel OECD tervishoiukulude andmestikuga. Liita tuleb riikide nimede alusel, seega esmalt tuleks ESS-i andmestikus riikide koodid asendada nimedega (nt funktsiooniga as_factor)
+
+- Milliste ESS 10. laines osalenud riikide puhul on andmed OECD andmestikus, millistel need puuduvad? Kui suurel osal ESS riikidest OECD andmed puuduvad?
+
+- Koostage rahulolu keskmistega ja tervishoiukuludega (% SKP-st) hajuvusdiagramm
+
+- Lisage diagrammile riikide nimed
+
+---
+
+# Harjutus 5
+
+```{r message = FALSE, warning = FALSE}
+library(haven)
+library(tidyverse)
+ess10 <- read_spss("data/ess10.sav")
+
+rahulolu_10 <- ess10 %>% 
+  group_by(cntry) %>% 
+  summarise(rah_trv_10 = TAM::weighted_mean(stfhlth, w = pspwght))
+
+rahulolu_10
+```
+
+---
+
+# Harjutus 5
+
+```{r}
+oecd <- readxl::read_excel("data/oecd_health_exp.xlsx")
+```
+
+---
+
+```{r echo = FALSE}
+oecd %>% DT::datatable()
+```
+
+---
+
+# Harjutus 5
+
+- Eelneval slaidil olevas tabelis on viimastel lehtedel osade riikide puhul tervishoiukulutuste osakaal SKP-st puudu, selle asemel on `..`
+
+- Seda käsitleb R tekstina, mistõttu on ka kõik arvud tunnuses teksti formaadis
+
+- Hajuvusdiagrammi selliste tekstiliste andmetega teha ei saa, muudame tunnuse `health_exp` arvuliseks 
+
+---
+
+# Harjutus 5
+
+```{r warning = FALSE, message = FALSE}
+oecd <- oecd %>% 
+  mutate(health_exp = as.numeric(health_exp))
+
+class(oecd$health_exp)
+```
+
+---
+
+```{r echo = FALSE}
+oecd %>% DT::datatable()
+```
+
+---
+
+# Harjutus 5
+
+```{r}
+rahulolu_10 %>% 
+  semi_join(oecd, by = join_by(cntry == country))
+```
+
+- Andmestike ühendamisega jääb järgi null rida, miski on mäda
+
+- ESS-i andmestikus on tunnuses `cntry` riikide koodid, riikide nimed on vaid märgenditena
+
+- Asendame ESS-i andmestikus riigi tunnuses kahetähelised koodid märgenditega
+
+---
+
+# Harjutus 5
+
+```{r}
+rahulolu_10 <- rahulolu_10 %>% 
+  mutate(cntry = as_factor(cntry))
+
+rahulolu_10 %>% 
+  semi_join(oecd, by = join_by(cntry == country))
+```
+
+---
+
+# Harjutus 5
+
+- Milliste ESS 10. laines osalenud riikide puhul on andmed OECD andmestikus, millistel need puuduvad?
+
+```{r}
+rahulolu_10 %>% 
+  anti_join(oecd, by = join_by(cntry == country))
+```
+
+---
+
+# Harjutus 5
+
+- Kui suurel osal ESS riikidest OECD andmed puuduvad? Selle saab antud juhul ka peast arvutada, aga kui riike oleks rohkem, saaks arvutada näiteks nii:
+
+```{r}
+rahulolu_10 %>% 
+  left_join(oecd, by = join_by(cntry == country)) %>% 
+  summarise(puudu = sum(is.na(health_exp)),
+            riikide_arv_kokku = n(),
+            puudu_protsent = puudu / riikide_arv_kokku)
+```
+
+---
+
+# Harjutus 5
+
+```{r rah_oecd_haj, warning = FALSE, eval = FALSE}
+rahulolu_10 %>% 
+  left_join(oecd, by = join_by(cntry == country)) %>% 
+  ggplot(aes(health_exp, rah_trv_10, label = cntry)) +
+  geom_point() +
+  ggrepel::geom_text_repel()
+```
+
+---
+
+# Harjutus 5
+
+```{r ref.label = "rah_oecd_haj", warning = FALSE, echo = FALSE}
+```
+
+---
+
+# Harjutus 6
+
+- Laadige R-i andmestikud `lotr_1.tsv` ja `lotr_races.tsv`. Failid on *tab separated values* formaadis, mis on analoogne csv-formaadiga, aga eri tunnuste väärtuseid eraldavad mitte komad, vaid tabulaatorid. Failide R-i laadimiseks saab kasutada funktsiooni `read_tsv` paketist `readr` (kui olete sisse lugenud `tidyverse`'i paketi, on juba `readr` ka sisse loetud)
+
+  - Esimeses failis on andmed Sõrmuste Isanda triloogia esimese filmi Sõrmuse Vennaskond kohta, kui palju on mingi tegelane mingis episoodis sõna saanud (sõnade arv). Teises on andmed Sõrmuste Isanda triloogia tegelaste kohta, mis rassi mingi tegelane kuulub.
+
+- Kui palju mingi rassi esindajad Sõrmuse Vennaskonna filmis sõna saavad?
+
+- Küsimusele vastamiseks lisage esimese filmi andmetele rassi tunnus ja tehke vajalikud arvutused.
+
+---
+
+# Harjutus 6
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+lotr_1 <- read_tsv("data/lotr/lotr_1.tsv")
+lotr_1
+```
+
+---
+
+# Harjutus 6
+
+```{r message = FALSE}
+lotr_races <- read_tsv("data/lotr/lotr_races.tsv")
+lotr_races
+```
+
+---
+
+# Harjutus 6
+
+```{r eval = FALSE}
+lotr_1 <- lotr_1 %>% 
+  left_join(lotr_races)
+```
+
+- Miks see käsk ei tööta?
+
+---
+
+# Harjutus 6
+
+```{r}
+lotr_1 <- lotr_1 %>% 
+  left_join(lotr_races, by = join_by(Character == chrctr))
+
+lotr_1
+```
+
+---
+
+# Harjutus 6
+
+```{r}
+lotr_1 %>% 
+  group_by(Race) %>% 
+  summarise(sonade_arv = sum(Words)) %>% 
+  arrange(desc(sonade_arv))
+```
+
+---
+
+# Harjutus 7
+
+- Laadige R-i andmestikud `lotr_2.tsv` ja `lotr_3.tsv`. Nendes samad andmed ka triloogia teise ja kolmanda filmi kohta, rassi tunnus on juba olemas. 
+
+- Millised tegelased on kogu triloogia peale kokku kõige rohkem sõna saanud? Arvutage sõnade arv.
+
+- Kuidas saaks seda ülesannet lahendada? Mis kõige oleks lihtsam?
+
+---
+
+# Harjutus 7
+
+- Vaatame andmestikud üle
+
+```{r}
+lotr_1
+```
+
+---
+
+# Harjutus 7
+
+```{r message = FALSE}
+lotr_2 <- read_tsv("data/lotr/lotr_2.tsv")
+
+lotr_2
+```
+
+---
+
+# Harjutus 7
+
+```{r message = FALSE}
+lotr_3 <- read_tsv("data/lotr/lotr_3.tsv")
+
+lotr_3
+```
+
+---
+
+# Harjutus 7
+
+- Kõigis andmestikes on samad tunnused samade nimedega
+
+- Kõige lihtsam oleks ühendada andmestikud enne arvutuste tegemist
+
+- Kui
+
+  - `*_join` funktsioonidega lisame ühele andmestikule juurde teisest andmestikust tunnuseid (ehk veerge) ning 
+  
+  - read ühendame võtmetunnuste põhjal
+
+- siis
+
+  - funktsiooniga `bind_rows` lisame ühele andmestikule juurde teisest andmestikust indiviide (ehk ridu) ning
+  
+  - veerud ühendatakse veerunimede põhjal
+
+---
+
+# Harjutus 7
+
+```{r}
+lotr <- bind_rows(lotr_1, lotr_2, lotr_3)
+lotr %>% DT::datatable()
+```
+
+---
+
+# Harjutus 7
+
+- Veergude ühendamiseks on analoogne funktsioon `bind_cols`, aga miks seda peaaegu kunagi ei peaks kasutama, saate lähemalt lugeda [siit](https://stat545.com/multiple-tibbles.html#column-binding)
+
+---
+
+# Harjutus 7
+
+- Millised tegelased on kogu triloogia peale kokku kõige rohkem sõna saanud? Arvutage sõnade arv.
+
+```{r}
+lotr %>% 
+  group_by(Character) %>% 
+  summarise(sonade_arv = sum(Words, na.rm = TRUE)) %>% 
+  arrange(desc(sonade_arv))
+```
