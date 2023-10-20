@@ -1,0 +1,201 @@
+---
+title: 'Andmepädevus: iseseisev töö 1'
+author: "Indrek Soidla"
+date: "2023-10-19"
+output: 
+  html_document:
+    theme: spacelab
+    highlight: tango
+    fig_cap: true
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Tööstaatus ja vanus
+
+1. *Kas töötajate vanuseline jaotus (agea) erineb sõltuvalt tööstaatusest (palgatöötaja / eraettevõtja / töötaja oma pere ettevõttes, tunnus emplrel)? Koostage karpdiagramm ja vastake selle alusel.*
+
+```{r}
+library(haven)
+ess10 <- read_spss("data/ess10_assignment1.sav")
+
+library(tidyverse)
+ee10 <- ess10 %>% 
+  filter(cntry == "EE")
+
+ee10 <- ee10 %>% 
+  mutate(emplrel = recode(as.factor(emplrel),
+                          "1" = "Palgatöötaja",
+                          "2" = "Eraettevõtja",
+                          "3" = "Töötaja enda pere firmas"))
+
+ee10 %>% 
+  ggplot(aes(x = emplrel, y = agea)) +
+  geom_boxplot() +
+  labs(x = "Tööstaatus",
+       y = "Vanus")
+```
+
+Töötajate vanuseline jaotus sõltub tööstaatusest. Palgatöötajate vanuseline jaotus on kõige hajusam (sh katab kõige laiemat vanusevahemikku), eraettevõtjate mediaanvanus on palgatöötajatest ainult mõne aasta võrra väiksem, samas on ettevõtjate seas vähem nii vanemaid vastajaid kui päris noori. Enda pere firmas töötajate vanusevahemik on sarnasem eraettevõtjatele kui palgatöötajatele, samas on mediaanvanus selles grupis võrreldes teiste gruppidega kõige madalam.
+
+2. *Eelnev joonis võimaldas näha, milline on maksimumvanus igas tööstaatuse grupis. Ilmneb, justkui oleks nii ettevõtjate kui palgatöötajate seas päris kõrge vanusega inimesi, aga ei ole näha, kas nende seas on üle 75-aastaseid mõni üksik või rohkem. Koostage vanuse ja tööstaatuse tunnustega diagramm, mis võimaldaks seda näha.*
+
+Siin on ilmselt kõige lihtsam teha näiteks hajutusega punktdiagrammi.
+
+```{r}
+ee10 %>% 
+  ggplot(aes(x = emplrel, y = agea)) +
+  geom_jitter() +
+  labs(x = "Tööstaatus",
+       y = "Vanus")
+```
+
+Põhimõtteliselt saab teha ka tulp- või summatulpdiagrammi.
+
+```{r}
+ee10 %>% 
+  filter(agea > 75) %>% 
+  ggplot(aes(x = emplrel)) +
+  geom_bar() +
+  labs(x = "Tööstaatus",
+       y = "Vastajate arv")
+```
+
+Eelneva diagrammi põhjal ei ole samas näha, kui suure osa üle 75-aastased mingist grupist moodustavad.
+
+```{r}
+ee10 %>% 
+  mutate(agea_75 = case_when(agea <= 75 ~ "Kuni 75",
+                             agea > 75 ~ "Üle 75+")) %>% 
+  ggplot(aes(x = emplrel, fill = agea_75)) +
+  geom_bar() +
+  labs(x = "Tööstaatus",
+       y = "Vastajate arv",
+       fill = "Vanusegrupp")
+```
+
+
+3. *Ilmneb, et palgatöötajate seas on üle 75-aastaseid päris palju. Mis võiks olla selle põhjus? Uurige Eesti küsitlusankeeti (ESS-i andmeportaali pealehel link ESS Round 10... => Country documentation => Estonia => Documents and additional data files => ESS10 Questionnaires EE), nt tööstaatuse küsimuse ees olevaid suunamisi. Kui te ei tea, millise järjekorranumbriga antud küsimus ankeedis on, otsige koodiraamatust ((ESS-i andmeportaali pealehel link ESS Round 10... => Documents => ESS10 Appendix A7 Codebook ed. 3.1). Milliste vastajate käest on tööstaatuse küsimus küsitud?*
+
+Siin peaksid nad ankeedi põhjal ja koodiraamatu abil välja tutkima, et tööstaatuse küsimus on küsitud kõigi käest, kes üldse kunagi elus on palgatööd teinud, st ka vastajatelt, kes on ammu pensionile läinud ja pole aastaid tööd teinud.
+
+4. *Koostage punktdiagramm vanuse ja tööstaatuse tunnusega, kus oleks värvidega eristatud vastajad, kes on viimase nädala jooksul tasustatud tööd teinud ja kes ei ole (tunnus pdwrk). Mis vanusest suureneb palgatöötajate seas nende vastajate hulk, kes viimasel nädalal tasustatud tööd teinud pole?*
+
+```{r}
+ee10 <- ee10 %>% 
+  mutate(pdwrk2 = recode(as.factor(pdwrk),
+                         "0" = "Ei teinud tasustatud tööd",
+                         "1" = "Tegi tasustatud tööd"))
+
+ee10 %>% 
+  ggplot(aes(x = emplrel, y = agea, colour = pdwrk2)) +
+  geom_jitter() +
+  labs(x = "Tööstaatus",
+       y = "Vanus")
+```
+
+Siit peaks välja tulema, et umbes 63 eluaasta piirilt ehk umbkaudu pensionile jäämise vanusest suureneb nende osa, kes pole viimasel nädalal tasustatud tööd teinud.
+
+## Haridustee pikkus
+
+5. *Koostage diagramm haridustee pikkuse tunnuse (eduyrs) jaotusega. Kas tunnuses leidub mõjukaid erindeid (vähemalt kolme kvartiilhaarde kaugusel ülemisest kvartiilist)? Mis võiks olla selle põhjuseks? Vajadusel vaadake ankeeti.*
+
+Siin sobib histogramm või ka tulpdiagramm, sest eristuvaid väärtuseid ei ole selles arvulises tunnuses palju.
+
+```{r}
+ee10 %>% 
+  ggplot(aes(eduyrs)) +
+  geom_histogram()
+
+ee10 %>% 
+  ggplot(aes(eduyrs)) +
+  geom_bar()
+```
+
+Tihedusjaotus on erindite tuvastamiseks oluliselt kehvem, aga kui nad selle pealt siiski erindit märkavad, on pmst ok.
+
+```{r}
+ee10 %>% 
+  ggplot(aes(eduyrs)) +
+  geom_density()
+```
+
+Erind on üks indiviid väärtusega 77, mis ankeedi järgi tähendab, et vastaja keeldus vastamast, kood 77 on aga jäänud märkimata andmelüngaks (tegelikult ma ise kodeerisin ülesande koostamisel ja andmestiku ettevalmistamisel selle NA 77-ks, aga mingis muus formaadis andmestiku sisselugemisel võib selline juhtum ka niisama ette tulla).
+
+6. Kodeerige väärtus 77 ümber andmelüngaks (NA). Saate selleks kasutada dplyri funktsioone mutate ja na_if (vajadusel otsige ise antud funktsiooni kohta infot). Koostage muudetud haridustee pikkuse tunnusega tulpdiagramm (tegu on küll arvulise tunnusega, kuid see on täisarvuline tunnus, kus eristuvaid väärtuseid ei ole palju).
+
+```{r}
+ee10 %>% 
+  mutate(eduyrs = na_if(eduyrs, 77)) %>% 
+  ggplot(aes(eduyrs)) +
+  geom_bar()
+```
+
+## Demokraatia olukord
+
+7. Uurige visuaalselt tunnuste, mille aluseks on ankeedis küsimused D13-D24, jaotuseid. Koostage iga tunnuse kohta tulpdiagramm, teisendades andmestiku pikkformaati ja kasutades eri jooniste esitamiseks funktsiooni `facet_wrap`. Milliste tunnuste puhul on kõige vähem vastuseid 9 ja 10, milliste puhul kõige rohkem? Kas see vastab sellele, mida Eesti ühiskonnas valitsevate hoiakute kohta varasemast teate (pidage silmas, et Eesti 10. laine andmed on kogutud 2021. aasta teises pooles)?
+
+```{r}
+ee10 %>% 
+  select(fairelcc:keydecc) %>% 
+  pivot_longer(cols = everything(),
+               names_to = "tunnus",
+               values_to = "vaartus") %>% 
+  ggplot(aes(x = vaartus)) +
+  geom_bar() +
+  facet_wrap(~ tunnus)
+```
+
+Kõige vähem on vastuseid 9 ja 10 tunnuste
+
+- `viepolc` (Eestis jäävad tavaliste inimeste vaated poliitilise eliidi vaadetele peale),
+- `grdfincc` (valitsus võtab Eestis kasutusele meetmeid sissetulekute erinevuste vähendamiseks)
+- `gvctzpvc` (valitsus kaitseb Eestis kõiki kodanikke vaesuse eest) puhul.
+
+Kõige rohkem on vastuseid 9 ja 10 tunnuste 
+
+- `fairelcc` (riiklikud valimised on Eestis vabad ja ausad) ja 
+- `medcrgvc` (meedial on Eestis vabadus valitsust kritiseerida) puhul. 
+
+Tundub nagu üsna ootuspärane?
+
+8. *Jaotuste põhjal ilmneb, et kõige veendunumad on Eesti vastajad siinsete riiklike valimiste vabaduses ja aususes. Siinkohal võib tekkida küsimus, kas see paistab välja ka teiste riikide võrdluses või on ka teiste riikide vastajad oma valimiste aususes ja vabaduses sedavõrd veendunud? Sellele küsimusele vastamiseks uurige tunnuse `fairelcc` jaotust kõigis riikides, koostades iga riigi kohta tulpdiagrammi antud tunnusega, kasutades jälle funktsiooni `facet_wrap`.*
+
+Põhimõtteliselt sobib avastuslikuks analüüsiks siin järgnev joonis. Hindamisel tasub tähele panna, kas tudengid on eelmise ülesande valguses ka siin algandmestiku pikkformaati teisendanud või mitte - kui seda on tehtud, saab joonise valmis teha küll, aga antud juhul pole pikkformaati teisendamist üldse vaja (kui seda tehakse, siis andmestik sellest pikemaks ei muutu).
+
+```{r}
+ess10 %>%
+  select(cntry, fairelcc) %>% 
+  pivot_longer(cols = fairelcc,
+               names_to = "tunnus",
+               values_to = "fairelcc") %>% 
+  ggplot(aes(fairelcc)) +
+  geom_bar() +
+  facet_wrap(~ cntry)
+```
+
+Aga kuna riikides on vastajate arv erinev, oleks paremaks võrdlusaluseks joonis, kus y-teljel on protsendid:
+
+```{r}
+ess10 %>%
+  ggplot(aes(fairelcc, y = after_stat(prop))) +
+  geom_bar() +
+  facet_wrap(~ cntry)
+```
+
+Nii oleks veel parem, aga ei saa ka hinnet alandada, kui nad sellist lahendust ei esita:
+
+```{r}
+ess10 %>%
+  ggplot(aes(fairelcc, y = after_stat(prop))) +
+  geom_bar() +
+  facet_wrap(~ as_factor(cntry) %>% fct_reorder(fairelcc, .desc = TRUE))
+```
+
+Jooniselt ilmneb, et see ikka varieerub riigiti, kui vabadeks ja ausateks parlamendivalimisi peetakse, samas ei ole Eesti vastajate hinnangud midagi erakordset vaid pigem on Eesti vastuste jaotus Euroopa mastaabis üsna keskpärane.
+
+Kõigil joonistel peaksid olema korralikud telgede nimed, legendid, tunnuste kategooriate nimed jne (välja arvatud tunnuste nimed 7. punkti joonisel) - ma ise ei jõua neid siia sulle näidiseks praegu seadistada, aga tudengid peaks seda oma töös tegema.
