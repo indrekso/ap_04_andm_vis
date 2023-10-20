@@ -865,6 +865,27 @@ superheat(pfi_eur,
 
 - Töödelge maatriksit nii, et see oleks lugejale arusaadav
 
+```{r echo = FALSE, eval = FALSE, warning = FALSE, message = FALSE}
+keskmised <- r9 %>% 
+  group_by(cntry) %>% 
+  summarise(across(c(stflife, trstprl, trstplt, trstplc, rlgdgr), \(x) TAM::weighted_mean(x, w = pspwght))) %>% 
+  mutate(cntry = as_factor(cntry))
+
+keskmised <- as.data.frame(keskmised)
+rownames(keskmised) <- keskmised$cntry
+
+keskmised$cntry <- NULL
+
+names(keskmised) <- c("Eluga\nrahulolu", "Usaldus\nparlamendi\nvastu", 
+                    "Usaldus\npoliitikute\nvastu", "Usaldus\npolitsei\vastu", 
+                    "Religioossus")
+
+superheat(keskmised,
+          order.rows = order(keskmised[1]),
+            left.label.text.size=3,
+          bottom.label.text.size=3)
+```
+
 ---
 
 # Tunnuste koosvarieeruvus: summatulpdiagramm
